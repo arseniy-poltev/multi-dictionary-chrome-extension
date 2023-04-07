@@ -1,0 +1,23 @@
+.option {
+  padding: 5px 0px;
+}
+
+label {
+  display: inline-block;
+  width: 200px;
+}
+
+#status {
+  visibility: hidden;
+}
+
+#save {
+  padding: 5px;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.invalid_field {
+  border-width: 5px !important;
+  border-color: red !important;
+}

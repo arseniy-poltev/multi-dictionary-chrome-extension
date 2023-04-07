@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Save Text to File Options</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <h1> Save Text to File Options </h1>
+
+  <form>
+    <h3> Is host application installed? </h3>
+    <div class="option">
+      <label>Application found:</label>
+      <input type="checkbox" id="nativeAppInstalled" disabled />
+      <p id="nativeAppMessage"></p>
+      <button id="appTest" type="button">Test application connection</button>
+    </div>
+
+    <h3> Directory </h3>
+    <div class="option">
+      <label>Local save directory:</label>
+      <input type="text" id="directory" size="50" placeholder="/Users/ or C:\Users\" value="E:\temp\"/>
+      <div id="directoryMessage"></div>
+    </div>
+
+    <h3> Save behaviour </h3>
+    <div class="option">
+      <label>Show notifications:</label>
+      <input type="checkbox" id="notifications" checked />
+    </div>
+
+    <div class="option">
+      <button id="save" type="button">Save</button>
+      <div id="status">Options saved.</div>
+    </div>
+  </form>
+
+  <script src="options.js"></script>
+</body>
+
+</html>

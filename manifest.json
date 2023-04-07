@@ -1,0 +1,35 @@
+{
+  "name": "Spell Checker",
+  "description": "Spell check and update words list",
+  "version": "1.0.0",
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "notifications",
+    "activeTab",
+    "nativeMessaging",
+    "scripting",
+    "webNavigation"
+  ],
+  "background": { "service_worker": "backgroundScript.js" },
+  "manifest_version": 3,
+  "icons": {
+    "64": "images/ico.png"
+  },
+  "options_ui": {
+    "page": "options.html"
+  },
+  "content_scripts": [
+    {
+      "js": ["jquery.min.js", "contentscript.js"],
+      "matches": ["<all_urls>"],
+      "css": ["highlight.css"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["script.js", "wordslist.txt"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
