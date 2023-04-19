@@ -1,29 +1,42 @@
-jQuery.fn.highlight = function (wordsList) {
+jQuery.fn.highlight = function (wordsList, locales) {
   function innerHighlight(node) {
     var skip = 0;
     if (node.nodeType == 3) {
-      node.data.split(" ").map((el) => {
-        let wordItem = el.trim();
-        if (wordItem) {
-          var pat = wordsList.find(
-            (el) => wordItem.toUpperCase() === el.toUpperCase()
-          );
-          if (wordItem && !pat) {
-            var pos = node.data.toUpperCase().indexOf(wordItem.toUpperCase());
-            if (pos >= 0) {
-              var spannode = document.createElement("span");
-              spannode.className = "sepllchecker-highlight";
-              var middlebit = node.splitText(pos);
-              var endbit = middlebit.splitText(wordItem.length);
-              var middleclone = middlebit.cloneNode(true);
-              spannode.appendChild(middleclone);
-              middlebit.parentNode.replaceChild(spannode, middlebit);
-              skip = 1;
+      var parent = $(node).closest("[lang]");
+      if (parent) {
+        var parentLang = parent.attr('lang');
+      }
+      if (parentLang && locales.includes(parentLang)) {
+        node.data.split(" ").map((el) => {
+          let wordItem = el.trim();
+          if (wordItem) {
+            if (endsWithSpeCharacters(wordItem)) {
+              wordItem = wordItem.slice(0, -1);
+            }
+  
+            var pat = wordsList.indexOf(wordItem);
+  
+            if (pat === -1) {
+              pat = wordsList.indexOf(wordItem.toLowerCase());
+            }
+  
+            if (wordItem && pat === -1) {
+              var pos = node.data.toUpperCase().indexOf(wordItem.toUpperCase());
+              if (pos >= 0) {
+                var spannode = document.createElement("span");
+                spannode.className = "sepllchecker-highlight";
+                var middlebit = node.splitText(pos);
+                var endbit = middlebit.splitText(wordItem.length);
+                var middleclone = middlebit.cloneNode(true);
+                spannode.appendChild(middleclone);
+                middlebit.parentNode.replaceChild(spannode, middlebit);
+                skip = 1;
+              }
             }
           }
-        }
-        return el;
-      });
+          return el;
+        });
+      }
     } else if (
       node.nodeType == 1 &&
       node.childNodes &&
@@ -79,57 +92,34 @@ jQuery.fn.removeHighlight = function () {
 };
 
 function initFileInfo() {
+  console.log("loading start");
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", chrome.runtime.getURL("wordslist.txt"), true);
+  xhr.open("GET", chrome.runtime.getURL("wordlist.txt"), true);
   xhr.onreadystatechange = function () {
     var status = xhr.status;
     if (xhr.readyState == XMLHttpRequest.DONE && status == 200) {
       allText = xhr.responseText.split("\r\n");
-      $("body").highlight(allText);
-      chrome.storage.sync.set({
-        wordsList: allText
-      }, function() {
-        console.log("storage sync success")
-      })
+      console.log("highlit start");
+      var lang = allText[0].split(",")
+      allText.splice(0, 1);
+      $("body").highlight(allText, lang);
+      console.log("highlit end");
+      chrome.storage.local.set(
+        {
+          wordsList: allText,
+          locales: lang
+        },
+        function () {
+          console.log("storage sync success");
+        }
+      );
     }
   };
   xhr.send();
 }
 
-async function addWord(wItem) {
-  if (wItem && wItem.trim()) {
-    var xhr = new XMLHttpRequest();
-    var url = chrome.runtime.getURL("wordslist.txt");
-    console.log(`url`, url)
-    xhr.open("GET", chrome.runtime.getURL("wordslist.txt"), true);
-    xhr.onreadystatechange = function () {
-      var status = xhr.status;
-      if (xhr.readyState == XMLHttpRequest.DONE && status == 200) {
-        allText = xhr.responseText.split("\r\n");
-        let findItem = allText.find(el => el.toUpperCase() === wItem.trim().toUpperCase());
-        console.log(`findItem`, findItem)
-        // const newFileHandle = await newDirectoryHandle.getFileHandle('My Notes.txt', { create: true });
-
-        if (findItem) {
-          allText = allText.filter(el => el.toUpperCase() !== wItem.trim().toUpperCase());
-          // var findNode = $('span.sepllchecker-highlight:contains("' + findItem + '")');
-          $("body").highlight(allText);
-        } else {
-          console.log("wwwwwwwwwwwwwwwwwwwwwwwwww")
-          allText.push(wItem.trim());
-          console.log(`allText`, allText)
-          $("body").highlight(allText);
-        }
-      }
-    };
-    xhr.send();
-  }
-}
-
 chrome.runtime.onMessage.addListener(function (request, sender) {
   console.log("Message from service worker:", request.message);
-  // addWord(request.message);
-
   if (request.message === "init-highlight") {
     initFileInfo();
   }
@@ -137,4 +127,24 @@ chrome.runtime.onMessage.addListener(function (request, sender) {
   if (request.message === "reload-page") {
     window.location.reload();
   }
+});
+
+function getSelectedText() {
+  if (window.getSelection) {
+    return window.getSelection().toString();
+  } else if (document.selection) {
+    return document.selection.createRange().text;
+  }
+  return "";
+}
+
+document.addEventListener("mouseup", (event) => {
+  var selectionText = getSelectedText();
+  chrome.runtime.sendMessage(
+    {
+      type: "ACTIVITY_SELECT_TEXT",
+      data: selectionText
+    },
+    function () {}
+  );
 });

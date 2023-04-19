@@ -1,4 +1,13 @@
 
 .sepllchecker-highlight {
-    background-color: rgb(199, 95, 95) !important;
+    background-color: #FFF4B9 !important;
+    color: #3c4b64;
+}
+
+.custom-menu {
+    z-index:1000;
+    position: absolute;
+    background-color:#C0C0C0;
+    border: 1px solid black;
+    padding: 2px;
 }

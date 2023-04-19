@@ -5,7 +5,7 @@ const HOST_APPLICATION_NAME = 'savetexttofile';
 const TEST_CONNECTIVITY_ACTION = 'TEST_CONNECTIVITY';
 
 function saveOptions() {
-  chrome.storage.sync.set({
+  chrome.storage.local.set({
     directory: document.getElementById('directory').value,
     notifications: document.getElementById('notifications').checked,
   }, function() {
@@ -18,7 +18,7 @@ function saveOptions() {
 }
 
 function restoreOptions() {
-  chrome.storage.sync.get({
+  chrome.storage.local.get({
     directory: '',
     notifications: true,
   }, function(items) {

@@ -1,24 +1,18 @@
-#!/usr/bin/env python
-#/*******************************************************************************
-# * Licensed under the Apache License, Version 2.0 (the "License");
-# * you may not use this file except in compliance with the License.
-# * You may obtain a copy of the License at
-# *
-# * http://www.apache.org/licenses/LICENSE-2.0
-# *
-# * Unless required by applicable law or agreed to in writing, software
-# * distributed under the License is distributed on an "AS IS" BASIS,
-# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# * See the License for the specific language governing permissions and
-# * limitations under the License.
-# *******************************************************************************/
-
 import sys
 import json
 import struct
 import os
 
 version = "0.2.0"
+# import logging
+
+# logging.basicConfig(filename="C:\savetexttofile\logs.log",
+#                     filemode='a',
+#                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+#                     datefmt='%H:%M:%S',
+#                     level=logging.DEBUG)
+# logger = logging.getLogger('nativeMessage')
+
 
 try:
     # Python 3.x version
@@ -28,8 +22,9 @@ try:
         if len(rawLength) == 0:
             sys.exit(0)
         messageLength = struct.unpack('@I', rawLength)[0]
-        message = sys.stdin.buffer.read(messageLength).decode('utf-8')
-        return json.loads(message)
+        message = sys.stdin.buffer.read(messageLength)
+        res = message.decode("utf-8")
+        return json.loads(res)
 
     # Encode a message for transmission,
     # given its content.
@@ -69,9 +64,8 @@ try:
                 configuration['fileContent'] = '\n\n' + configuration['fileContent']
             else:
                 saveMode = 'w+'
-
             try:
-                with open(absoluteFilePath, saveMode) as file:
+                with open(absoluteFilePath, saveMode, encoding = "utf-8") as file:
                     file.write('%s' % configuration['fileContent'])
                     file.close()
                     result['status'] = 'Success'
@@ -105,6 +99,7 @@ except AttributeError:
         sys.stdout.flush()
 
     while True:
+
         configuration = getMessage()
         absoluteFilePath = ''
         saveMode = ''

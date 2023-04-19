@@ -9,7 +9,8 @@
     "activeTab",
     "nativeMessaging",
     "scripting",
-    "webNavigation"
+    "webNavigation",
+    "unlimitedStorage"
   ],
   "background": { "service_worker": "backgroundScript.js" },
   "manifest_version": 3,
@@ -21,14 +22,14 @@
   },
   "content_scripts": [
     {
-      "js": ["jquery.min.js", "contentscript.js"],
+      "js": ["jquery.min.js", "contentscript.js", "helper.js"],
       "matches": ["<all_urls>"],
       "css": ["highlight.css"]
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["script.js", "wordslist.txt"],
+      "resources": ["script.js", "wordlist.txt"],
       "matches": ["<all_urls>"]
     }
   ]

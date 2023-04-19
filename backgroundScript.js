@@ -1,12 +1,14 @@
+importScripts("helper.js");
 'use strict';
 
 const HOST_APPLICATION_NAME = 'savetexttofile';
 const TEST_CONNECTIVITY_ACTION = 'TEST_CONNECTIVITY';
 const SAVE_TEXT_ACTION = 'SAVE';
 const MENU_ITEM_ID = 'save-text-to-file-menu-item';
+const MENU_ITEM_ID_1 = 'save-text-to-file-menu-item_1';
 const NOTIFICATION_ID = 'save-text-to-file-notification';
 const EXTENSION_TITLE = 'Spell Checker';
-const TEXT_FILE_NAME = "wordslist.txt";
+const TEXT_FILE_NAME = "wordlist.txt";
 
 var directory;
 var notifications;
@@ -43,14 +45,15 @@ function saveTextViaApp(directory, sanitizedFileName, fileContents, tabId) {
   });
 }
 
-async function saveTextToFile(info, tabId) {
-  chrome.storage.sync.get({
+async function saveTextToFile(selectionText, tabId) {
+  chrome.storage.local.get({
     directory: '',
     notifications: true,
     conflictAction: 'uniquify',
     wordsList: [],
+    locales: []
   }, function(items) {
-    createFileContents(info.selectionText, items.wordsList, function(fileContents) {
+    createFileContents(selectionText, items.wordsList, items.locales, function(fileContents) {
       chrome.runtime.sendNativeMessage(HOST_APPLICATION_NAME, testConnectivityPayload, function(response) {
         if (chrome.runtime.lastError) {
           console.log('SaveTextToFile: Error communicating between the native application and web extension.');
@@ -66,7 +69,7 @@ async function saveTextToFile(info, tabId) {
   });
 }
 
-function createFileContents(selectionText, wordsList, callback) {
+function createFileContents(selectionText, wordsList, locales, callback) {
   let findItem = wordsList.find(el => el.toUpperCase() === selectionText.trim().toUpperCase());
 
   if (findItem) {
@@ -76,6 +79,13 @@ function createFileContents(selectionText, wordsList, callback) {
   }
 
   var text = "";
+
+  locales.forEach(function(el) {
+    text += el + ","
+  })
+  text = text.slice(0, -1);
+  text += "\n";
+
   wordsList.forEach(function(item) {
     if (item) {
       text = text + item + "\n";
@@ -96,10 +106,11 @@ function notify(message) {
   });
 }
 
-chrome.storage.sync.get({
+chrome.storage.local.get({
   directory: '',
   notifications: true,
-  conflictAction: 'uniquify'
+  conflictAction: 'uniquify',
+  wordsList: [],
 }, function(items) {
   directory = items.directory;
   notifications = items.notifications;
@@ -160,6 +171,27 @@ chrome.contextMenus.create({
 
 chrome.contextMenus.onClicked.addListener(function(info, tab) {
   if (info.menuItemId === MENU_ITEM_ID) {
-    saveTextToFile(info, tab.id);
+    saveTextToFile(info.selectionText, tab.id);
+  } else if(info.menuItemId === MENU_ITEM_ID_1) {
+    var selectionText = info.selectionText.slice(0, -1);
+    saveTextToFile(selectionText, tab.id);
   }
 });
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if(request.type === 'ACTIVITY_SELECT_TEXT') {
+    chrome.contextMenus.remove(MENU_ITEM_ID_1, function() {})
+
+    var selectionText = request.data;
+    selectionText = selectionText.trim();
+    if(endsWithSpeCharacters(selectionText)) {
+      selectionText = selectionText.slice(0, -1);
+      chrome.contextMenus.create({
+        id: MENU_ITEM_ID_1,
+        title: "Add/Remove \"" + selectionText + "\"",
+        contexts: ['selection']
+      });
+    }
+  }
+  sendResponse();
+})
