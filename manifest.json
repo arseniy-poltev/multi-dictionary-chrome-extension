@@ -22,14 +22,14 @@
   },
   "content_scripts": [
     {
-      "js": ["jquery.min.js", "contentscript.js", "helper.js"],
+      "js": ["js/jquery.min.js", "js/contentscript.js", "js/helper.js", "js/jquery.contextMenu.min.js", "js/jquery.ui.position.min.js"],
       "matches": ["<all_urls>"],
-      "css": ["highlight.css"]
+      "css": ["css/highlight.css", "css/jquery.contextMenu.css"]
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["script.js", "wordlist.txt"],
+      "resources": ["wordlist.txt", "ignorewords.txt"],
       "matches": ["<all_urls>"]
     }
   ]
