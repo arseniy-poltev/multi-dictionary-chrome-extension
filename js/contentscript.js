@@ -2,6 +2,10 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
   function replaceText(wordItem, node, skip) {
     let stripItem = removeSpeCharaceters(wordItem);
 
+    if (!stripItem) {
+      return skip;
+    }
+  
     if (stripItem.includes("-")) {
       stripItem.split("-").map((el) => {
         skip = replaceText(el, node, skip);
@@ -10,26 +14,22 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
       // Check if worditem exist in the wordlist
       var pat = wordsList.includes(stripItem) || wordsList.includes(wordItem);
       if (!pat) {
-        pat =
-          wordsList.includes(stripItem.toLowerCase()) ||
-          wordsList.includes(wordItem.toLowerCase());
+        pat = wordsList.includes(stripItem.toLowerCase()) || wordsList.includes(wordItem.toLowerCase());
       }
 
       // Check if worditem exist in the ignorelist
-      var ignorepat =ignoreList.includes(stripItem) || ignoreList.includes(wordItem);
+      var ignorepat = ignoreList.includes(stripItem) || ignoreList.includes(wordItem);
       if (!ignorepat) {
-        ignorepat =
-          ignoreList.includes(stripItem.toLowerCase()) ||
-          ignoreList.includes(wordItem.toLowerCase());
+        ignorepat = ignoreList.includes(stripItem.toLowerCase()) || ignoreList.includes(wordItem.toLowerCase());
       }
 
       if (wordItem && !pat && !ignorepat) {
-        var pos = node.data.toUpperCase().indexOf(wordItem.toUpperCase());
+        var pos = replaceTypoQuotes(node.data).toUpperCase().indexOf(wordItem.toUpperCase());
         if (pos >= 0) {
           var spannode = document.createElement("span");
           spannode.className = "sepllchecker-highlight";
           var middlebit = node.splitText(pos);
-          var endbit = middlebit.splitText(wordItem.length);
+          // var endbit = middlebit.splitText(wordItem.length);
           var middleclone = middlebit.cloneNode(true);
           spannode.appendChild(middleclone);
           middlebit.parentNode.replaceChild(spannode, middlebit);
@@ -192,7 +192,7 @@ function initContextMenu() {
         // this callback is executed every time the menu is to be shown
         // its results are destroyed every time the menu is hidden
         var el = e.target;
-        var optionText = $(el).text();
+        var optionText = replaceTypoQuotes($(el).text());
 
         var items = {};
         var removedText = removeSpeCharaceters(optionText);
