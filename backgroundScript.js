@@ -16,10 +16,16 @@ var testConnectivityPayload = {
   action: TEST_CONNECTIVITY_ACTION,
 };
 
-function saveTextViaApp(directory, sanitizedFileName, fileContents, tabId) {
+function saveTextViaApp(directory, mode, fileContents, tabId) {
+  var fileName = "";
+  if(mode === "ADD") {
+    fileName = TEXT_FILE_NAME;
+  } else {
+    fileName = IGNORE_FILE_NAME;
+  }
   var payload = {
     action: SAVE_TEXT_ACTION,
-    filename: sanitizedFileName,
+    filename: fileName,
     directory: directory,
     fileContent: fileContents,
     conflictAction: conflictAction,
@@ -35,7 +41,11 @@ function saveTextViaApp(directory, sanitizedFileName, fileContents, tabId) {
       } else {
         var json = JSON.parse(response);
         if (json.status === "Success") {
-          notify("Text saved.");
+          if (mode === "ADD") {
+            notify("Text added to the wordlist.");
+          } else {
+            notify("Text added to the ignorelist.");
+          }
           chrome.tabs.sendMessage(tabId, { message: "reload-page" });
         } else {
           notify("Error occured saving text via host application. Check browser console.");
@@ -73,11 +83,7 @@ async function saveTextToFile(selectionText, tabId, mode) {
               } else {
                 var responseObject = JSON.parse(response);
                 if (responseObject.status === "Success") {
-                  if (mode === "ADD") {
-                    saveTextViaApp(directory, TEXT_FILE_NAME, fileContents, tabId);
-                  } else if (mode === "IGNORE") {
-                    saveTextViaApp(directory, IGNORE_FILE_NAME, fileContents, tabId);
-                  }
+                  saveTextViaApp(directory, mode, fileContents, tabId);
                 }
               }
             }

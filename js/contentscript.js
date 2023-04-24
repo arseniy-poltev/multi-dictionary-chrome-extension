@@ -29,7 +29,7 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
           var spannode = document.createElement("span");
           spannode.className = "sepllchecker-highlight";
           var middlebit = node.splitText(pos);
-          // var endbit = middlebit.splitText(wordItem.length);
+          var endbit = middlebit.splitText(wordItem.length);
           var middleclone = middlebit.cloneNode(true);
           spannode.appendChild(middleclone);
           middlebit.parentNode.replaceChild(spannode, middlebit);
