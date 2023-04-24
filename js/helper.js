@@ -17,7 +17,7 @@ function replaceTypoQuotes(str) {
 }
 
 function removeSpeCharaceters(str) {
-  if (/^[0-9€$¢£]*$/.test(str)) {
+  if (/^[0-9€$¢£.,-]*$/.test(str)) {
     return null;
   }
 
