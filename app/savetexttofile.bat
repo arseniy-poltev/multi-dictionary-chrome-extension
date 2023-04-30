@@ -1,3 +1,3 @@
 @echo off
 
-python -u "c:\\savetexttofile\\savetexttofile.py"
+python -u "c:\\savetexttofile\\app\\savetexttofile.py"
