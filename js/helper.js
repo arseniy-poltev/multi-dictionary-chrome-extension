@@ -1,12 +1,22 @@
-function endsWithSpeCharacters(str) {
-  var characters = ["!", "?", ".", ",", ":", ";"];
+function decodeHTMLEntities (str) {
+  var txt = document.createElement("textarea");
+  txt.innerHTML = str;
+  return txt.value;
+}
+
+function endsWithPeriod(str) {
   str = str.trim();
   if (!str) return false;
-  if (characters.some((s) => str.endsWith(s))) {
+  if (str.endsWith('.')) {
     return true;
   } else {
     return false;
   }
+}
+
+function removePeriod(str) {
+  str = str.trim().replace(/\./g, '');
+  return str;
 }
 
 function replaceTypoQuotes(str) {
@@ -23,7 +33,7 @@ function removeSpeCharaceters(str) {
 
   str = replaceTypoQuotes(str);
   
-  var specChars = "-!?.,;:[](){}<>'\"";
+  var specChars = "&-!?,;:[](){}<>'\"";
   var start = 0, 
         end = str.length;
 

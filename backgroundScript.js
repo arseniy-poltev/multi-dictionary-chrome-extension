@@ -127,14 +127,16 @@ function createFileContents(selectionText, wordsList, locales, mode, callback) {
 }
 
 function notify(message) {
-  chrome.notifications.clear(NOTIFICATION_ID, function () {
-    chrome.notifications.create(NOTIFICATION_ID, {
-      title: EXTENSION_TITLE,
-      type: "basic",
-      message: message,
-      iconUrl: chrome.runtime.getURL("images/ico.png"),
+  if (notifications) {
+    chrome.notifications.clear(NOTIFICATION_ID, function () {
+      chrome.notifications.create(NOTIFICATION_ID, {
+        title: EXTENSION_TITLE,
+        type: "basic",
+        message: message,
+        iconUrl: chrome.runtime.getURL("images/ico.png"),
+      });
     });
-  });
+  }
 }
 
 chrome.storage.local.get(

@@ -5,6 +5,7 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
     if (!stripItem) {
       return skip;
     }
+    stripItem = removePeriod(stripItem);
   
     if (stripItem.includes("-")) {
       stripItem.split("-").map((el) => {
@@ -24,7 +25,8 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
       }
 
       if (wordItem && !pat && !ignorepat) {
-        var pos = replaceTypoQuotes(node.data).toUpperCase().indexOf(wordItem.toUpperCase());
+        var pos = replaceTypoQuotes(node.data).toUpperCase().indexOf(replaceTypoQuotes(wordItem).toUpperCase());
+
         if (pos >= 0) {
           var spannode = document.createElement("span");
           spannode.className = "sepllchecker-highlight";
@@ -48,8 +50,9 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
       if (parent) {
         var parentLang = parent.attr("lang");
       }
-      if (parentLang && locales.includes(parentLang)) {
-        node.data.split(" ").map((el) => {
+      if (parentLang && locales.includes(parentLang.toLowerCase())) {
+        var nodeData = decodeHTMLEntities(node.data);
+        nodeData.split(/[\s-—]+/).map((el) => {
           let wordItem = el.trim();
           if (wordItem) {
             skip = replaceText(wordItem, node, skip);
@@ -111,16 +114,12 @@ jQuery.fn.removeHighlight = function () {
     .end();
 };
 
-jQuery.fn.customContextMenu = function (callBack) {
-  $(this).each(function () {
-    $(this).bind("contextmenu", function (e) {
-      e.preventDefault();
-      callBack();
-    });
-  });
-};
-
 function initFileInfo() {
+  var str = "hi&nbsp;This is the test";
+  str = decodeHTMLEntities(str);
+
+  var splitRes = str.split('/&[^;]*;/');
+  console.log(`splitRes`, splitRes)
   console.log("loading start");
   var xhr = new XMLHttpRequest();
   var xhr1 = new XMLHttpRequest();
@@ -132,7 +131,7 @@ function initFileInfo() {
     if (xhr.readyState == XMLHttpRequest.DONE && status == 200) {
       var allText = xhr.responseText.split("\r\n");
       console.log("highlit start");
-      var lang = allText[0].split(",");
+      var lang = allText[0].toLowerCase().split(",");
       allText.splice(0, 1);
 
       // Read ignorewords.txt file
@@ -192,17 +191,22 @@ function initContextMenu() {
         // this callback is executed every time the menu is to be shown
         // its results are destroyed every time the menu is hidden
         var el = e.target;
-        var optionText = replaceTypoQuotes($(el).text());
+        var optionText = replaceTypoQuotes(decodeHTMLEntities(($(el).text())));
 
         var items = {};
-        var removedText = removeSpeCharaceters(optionText);
+        var optionText = removeSpeCharaceters(optionText);
+        var removedText = "";
+        if (endsWithPeriod(optionText)) {
+          removedText = removePeriod(optionText);
+        }
+        
         items["add_" + optionText] = { name: 'Add "' + optionText + '"' };
-        if (optionText !== removedText) {
+        if (removedText) {
           items["add_" + removedText] = { name: 'Add "' + removedText + '"' };
         }
         items["sep1"] = "---------";
         items["ignore_" + optionText] = { name: 'Ignore "' + optionText + '"' };
-        if (optionText !== removedText) {
+        if (removedText) {
           items["ignore_" + removedText] = {
             name: 'Ignore "' + removedText + '"',
           };
