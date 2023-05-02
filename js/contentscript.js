@@ -63,7 +63,8 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
     } else if (
       node.nodeType == 1 &&
       node.childNodes &&
-      !/(script|style)/i.test(node.tagName)
+      !/(script|style)/i.test(node.tagName) && 
+      !["TEXTAREA", "SELECT", "INPUT"].includes(node.tagName)
     ) {
       for (var i = 0; i < node.childNodes.length; ++i) {
         i += innerHighlight(node.childNodes[i]);
@@ -118,8 +119,7 @@ function initFileInfo() {
   var str = "hi&nbsp;This is the test";
   str = decodeHTMLEntities(str);
 
-  var splitRes = str.split('/&[^;]*;/');
-  console.log(`splitRes`, splitRes)
+  // var splitRes = str.split('/&[^;]*;/');
   console.log("loading start");
   var xhr = new XMLHttpRequest();
   var xhr1 = new XMLHttpRequest();
