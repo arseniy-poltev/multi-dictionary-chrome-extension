@@ -2,10 +2,13 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
   function replaceText(wordItem, node, skip) {
     let stripItem = removeSpeCharaceters(wordItem);
 
-    if (!stripItem) {
+    if (!stripItem || stripItem.length < 2) {
       return skip;
     }
     stripItem = removePeriod(stripItem);
+    if (!stripItem || stripItem.length < 2) {
+      return skip;
+    }
   
     if (stripItem.includes("-")) {
       stripItem.split("-").map((el) => {
