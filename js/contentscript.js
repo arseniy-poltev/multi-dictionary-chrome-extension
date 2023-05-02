@@ -169,7 +169,7 @@ chrome.runtime.onMessage.addListener(function (request, sender) {
   }
 
   if (request.message === "reload-page") {
-    window.location.reload();
+    // window.location.reload();
   }
 });
 
@@ -221,7 +221,9 @@ function initContextMenu() {
                   type: "ACTIVITY_ADD_TEXT",
                   data: str,
                 },
-                function () {}
+                function () {
+                  $(el)[0].parentNode.replaceChild(document.createTextNode($(el).text()), $(el)[0]);
+                }
               );
             } else if (key.startsWith("ignore_")) {
               var str = key.substring("ignore_".length);
@@ -230,7 +232,9 @@ function initContextMenu() {
                   type: "ACTIVITY_IGNORE_TEXT",
                   data: str,
                 },
-                function () {}
+                function () {
+                  $(el)[0].parentNode.replaceChild(document.createTextNode($(el).text()), $(el)[0]);
+                }
               );
             }
           },

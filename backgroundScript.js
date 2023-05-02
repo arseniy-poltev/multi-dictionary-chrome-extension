@@ -16,7 +16,7 @@ var testConnectivityPayload = {
   action: TEST_CONNECTIVITY_ACTION,
 };
 
-function saveTextViaApp(directory, mode, fileContents, tabId) {
+function saveTextViaApp(directory, mode, fileContents, tabId, wordsList) {
   var fileName = "";
   if(mode === "ADD") {
     fileName = TEXT_FILE_NAME;
@@ -43,10 +43,12 @@ function saveTextViaApp(directory, mode, fileContents, tabId) {
         if (json.status === "Success") {
           if (mode === "ADD") {
             notify("Text added to the wordlist.");
+            chrome.storage.local.set({ wordsList: wordsList },function () {});
           } else {
             notify("Text added to the ignorelist.");
+            chrome.storage.local.set({ ignoreWords: wordsList },function () {});
           }
-          chrome.tabs.sendMessage(tabId, { message: "reload-page" });
+          // chrome.tabs.sendMessage(tabId, { message: "reload-page" });
         } else {
           notify("Error occured saving text via host application. Check browser console.");
           console.log("SaveTextToFile: Native application response: " + response);
@@ -67,9 +69,21 @@ async function saveTextToFile(selectionText, tabId, mode) {
       ignoreWords: [],
     },
     function (items) {
+
+      let wordsList = mode === "ADD" ? items.wordsList : items.ignoreWords;
+      let findItem = wordsList.find(
+        (el) => el.toUpperCase() === selectionText.trim().toUpperCase()
+      );
+    
+      if (findItem) {
+        // wordsList = wordsList.filter((el) => el.toUpperCase() !== selectionText.trim().toUpperCase());
+      } else {
+        wordsList.push(selectionText.trim());
+      }
+      
       createFileContents(
         selectionText,
-        mode === "ADD" ? items.wordsList : items.ignoreWords,
+        wordsList,
         items.locales,
         mode,
         function (fileContents) {
@@ -83,7 +97,7 @@ async function saveTextToFile(selectionText, tabId, mode) {
               } else {
                 var responseObject = JSON.parse(response);
                 if (responseObject.status === "Success") {
-                  saveTextViaApp(directory, mode, fileContents, tabId);
+                  saveTextViaApp(directory, mode, fileContents, tabId, wordsList);
                 }
               }
             }
@@ -95,17 +109,6 @@ async function saveTextToFile(selectionText, tabId, mode) {
 }
 
 function createFileContents(selectionText, wordsList, locales, mode, callback) {
-  let findItem = wordsList.find(
-    (el) => el.toUpperCase() === selectionText.trim().toUpperCase()
-  );
-
-  if (findItem) {
-    wordsList = wordsList.filter(
-      (el) => el.toUpperCase() !== selectionText.trim().toUpperCase()
-    );
-  } else {
-    wordsList.push(selectionText.trim());
-  }
 
   var text = "";
 
