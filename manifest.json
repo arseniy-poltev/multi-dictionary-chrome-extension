@@ -32,5 +32,6 @@
       "resources": ["wordlist.txt", "ignorewords.txt"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "host_permissions": ["*://*/*"]
 }

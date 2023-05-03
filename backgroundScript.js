@@ -16,7 +16,7 @@ var testConnectivityPayload = {
   action: TEST_CONNECTIVITY_ACTION,
 };
 
-function saveTextViaApp(directory, mode, fileContents, tabId, wordsList) {
+function saveTextViaApp(directory, mode, fileContents, wordsList) {
   var fileName = "";
   if(mode === "ADD") {
     fileName = TEXT_FILE_NAME;
@@ -58,7 +58,7 @@ function saveTextViaApp(directory, mode, fileContents, tabId, wordsList) {
   );
 }
 
-async function saveTextToFile(selectionText, tabId, mode) {
+async function saveTextToFile(selectionText, mode) {
   chrome.storage.local.get(
     {
       directory: "",
@@ -97,7 +97,7 @@ async function saveTextToFile(selectionText, tabId, mode) {
               } else {
                 var responseObject = JSON.parse(response);
                 if (responseObject.status === "Success") {
-                  saveTextViaApp(directory, mode, fileContents, tabId, wordsList);
+                  saveTextViaApp(directory, mode, fileContents, wordsList);
                 }
               }
             }
@@ -196,7 +196,7 @@ chrome.runtime.sendNativeMessage(
 );
 
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-  if (changeInfo.status == "complete") {
+  if (changeInfo.status === "complete" && tab.url) {
     chrome.tabs.sendMessage(tabId, { message: "init-highlight" });
   }
 });
@@ -212,18 +212,12 @@ chrome.runtime.onInstalled.addListener(function (details) {
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   let selectionText = request.data;
-  chrome.tabs.query(
-    { active: true, windowType: "normal", currentWindow: true },
-    function (tabs) {
-      if (request.type === "ACTIVITY_ADD_TEXT") {
-        saveTextToFile(selectionText, tabs[0].id, "ADD");
-      }
-    
-      if (request.type === "ACTIVITY_IGNORE_TEXT") {
-        saveTextToFile(selectionText, tabs[0].id, "IGNORE");
-      }
-    }
-  );
+  if (request.type === "ACTIVITY_ADD_TEXT") {
+    saveTextToFile(selectionText, "ADD");
+  }
   
+  if (request.type === "ACTIVITY_IGNORE_TEXT") {
+    saveTextToFile(selectionText, "IGNORE");
+  }
   sendResponse();
 });

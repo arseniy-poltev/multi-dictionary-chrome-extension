@@ -119,10 +119,6 @@ jQuery.fn.removeHighlight = function () {
 };
 
 function initFileInfo() {
-  var str = "hi&nbsp;This is the test";
-  str = decodeHTMLEntities(str);
-
-  // var splitRes = str.split('/&[^;]*;/');
   console.log("loading start");
   var xhr = new XMLHttpRequest();
   var xhr1 = new XMLHttpRequest();

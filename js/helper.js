@@ -21,7 +21,7 @@ function removePeriod(str) {
 
 function replaceTypoQuotes(str) {
   if (str) {
-    return str.replace(/”|„/g, '"').replace(/‘|’/g, "'");
+    return str.replace(/”|„|“|‟|«|»/g, '"').replace(/‘|’|‛|‚|‹|›/g, "'");
   }
   return str;
 }
