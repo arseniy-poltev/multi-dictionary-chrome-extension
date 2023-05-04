@@ -31,13 +31,22 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
         var pos = replaceTypoQuotes(node.data).toUpperCase().indexOf(replaceTypoQuotes(wordItem).toUpperCase());
 
         if (pos >= 0) {
+          // var spannode = document.createElement("span");
+          // spannode.className = "sepllchecker-highlight";
+          // var middlebit = node.splitText(pos);
+          // var endbit = middlebit.splitText(wordItem.length);
+          // var middleclone = middlebit.cloneNode(true);
+          // spannode.appendChild(middleclone);
+          // middlebit.parentNode.replaceChild(spannode, middlebit);
+
           var spannode = document.createElement("span");
           spannode.className = "sepllchecker-highlight";
-          var middlebit = node.splitText(pos);
-          var endbit = middlebit.splitText(wordItem.length);
-          var middleclone = middlebit.cloneNode(true);
-          spannode.appendChild(middleclone);
-          middlebit.parentNode.replaceChild(spannode, middlebit);
+          spannode.innerHTML = wordItem;
+
+          var txt = $(node).text();
+          targetTxt = txt.replace(txt.substring(pos, pos + wordItem.length), spannode.outerHTML);
+          $(node).replaceWith(targetTxt)
+
           skip = 1;
         }
       }
@@ -140,6 +149,7 @@ function initFileInfo() {
         if (xhr1.readyState == XMLHttpRequest.DONE && status == 200) {
           var ignoreList = xhr1.responseText.split("\r\n");
           $("body").highlight(allText, lang, ignoreList);
+          console.log("highlit end");
           initContextMenu();
           chrome.storage.local.set(
             {

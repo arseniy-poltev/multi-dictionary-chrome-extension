@@ -33,7 +33,7 @@ function removeSpeCharaceters(str) {
 
   str = replaceTypoQuotes(str);
   
-  var specChars = "&-!?,;:[](){}<>'\"";
+  var specChars = "&—–-!?,;:[](){}<>'\"";
   var start = 0, 
         end = str.length;
 
