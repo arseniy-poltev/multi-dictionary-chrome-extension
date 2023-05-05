@@ -64,7 +64,7 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
       }
       if (parentLang && locales.includes(parentLang.toLowerCase())) {
         var nodeData = decodeHTMLEntities(node.data);
-        nodeData.split(/[\s-—]+/).map((el) => {
+        nodeData.split(/[\s/+—–-]+/).map((el) => {
           let wordItem = el.trim();
           if (wordItem) {
             skip = replaceText(wordItem, node, skip);
