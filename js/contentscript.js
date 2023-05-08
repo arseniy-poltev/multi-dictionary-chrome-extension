@@ -127,7 +127,7 @@ jQuery.fn.removeHighlight = function () {
     .end();
 };
 
-function initFileInfo() {
+async function initFileInfo() {
   console.log("loading start");
   var xhr = new XMLHttpRequest();
   var xhr1 = new XMLHttpRequest();
@@ -138,7 +138,8 @@ function initFileInfo() {
     var status = xhr.status;
     if (xhr.readyState == XMLHttpRequest.DONE && status == 200) {
       var allText = xhr.responseText.split("\r\n");
-      console.log("highlit start");
+      console.log("highlight start");
+    
       var lang = allText[0].toLowerCase().split(",");
       allText.splice(0, 1);
 
@@ -148,8 +149,14 @@ function initFileInfo() {
         var status = xhr1.status;
         if (xhr1.readyState == XMLHttpRequest.DONE && status == 200) {
           var ignoreList = xhr1.responseText.split("\r\n");
+          
+          var startTime = new Date().getTime();
           $("body").highlight(allText, lang, ignoreList);
-          console.log("highlit end");
+          var endTime = new Date().getTime();
+          
+          console.log("highlight end");
+          console.log(`timeDiff`, endTime - startTime)
+          
           initContextMenu();
           chrome.storage.local.set(
             {
@@ -205,20 +212,35 @@ function initContextMenu() {
         var items = {};
         var optionText = removeSpeCharaceters(optionText);
         var removedText = "";
+        var optionList, periodOptionList;
         if (endsWithPeriod(optionText)) {
           removedText = removePeriod(optionText);
         }
         
-        items["add_" + optionText] = { name: 'Add "' + optionText + '"' };
+        var optionList = getWordVariations(optionText);
+        optionList.forEach(el => {
+          items["add_" + el] = { name: 'Add "' + el + '"' };  
+        });
+
         if (removedText) {
-          items["add_" + removedText] = { name: 'Add "' + removedText + '"' };
+          items["sep1"] = "---------";
+          periodOptionList = getWordVariations(removedText);
+          periodOptionList.forEach(el => {
+            items["add_" + el] = { name: 'Add "' + el + '"' };  
+          });
         }
-        items["sep1"] = "---------";
-        items["ignore_" + optionText] = { name: 'Ignore "' + optionText + '"' };
-        if (removedText) {
-          items["ignore_" + removedText] = {
-            name: 'Ignore "' + removedText + '"',
-          };
+
+        items["sep2"] = "---------";
+        
+        optionList.forEach(el => {
+          items["ignore_" + el] = { name: 'Ignore "' + el + '"' };  
+        });
+
+        if (periodOptionList) {
+          items["sep3"] = "---------";
+          periodOptionList.forEach(el => {
+            items["ignore_" + el] = { name: 'Ignore "' + el + '"' };  
+          });
         }
 
         return {

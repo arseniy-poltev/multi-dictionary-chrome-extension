@@ -46,3 +46,25 @@ function removeSpeCharaceters(str) {
     var res = (start > 0 || end < str.length) ? str.substring(start, end) : str;
     return res;
 }
+
+function onlyUnique(value, index, array) {
+  return array.indexOf(value) === index;
+}
+
+function getWordVariations(str) {
+  let upperCaseStr, cappitalizedStr, lowerCaseStr;
+  if (!str) return null;
+  if (str === str.toUpperCase()) {
+    upperCaseStr = str;
+    cappitalizedStr = str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
+    lowerCaseStr = str.toLowerCase();
+  } else {
+    upperCaseStr = str.toUpperCase();
+    cappitalizedStr = str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
+    lowerCaseStr = str.toLowerCase();
+  }
+
+  var res = [upperCaseStr, cappitalizedStr, lowerCaseStr, str];
+  res = res.filter(onlyUnique);
+  return res;
+}
