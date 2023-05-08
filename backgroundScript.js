@@ -72,7 +72,7 @@ async function saveTextToFile(selectionText, mode) {
 
       let wordsList = mode === "ADD" ? items.wordsList : items.ignoreWords;
       let findItem = wordsList.find(
-        (el) => el.toUpperCase() === selectionText.trim().toUpperCase()
+        (el) => el === selectionText.trim().toLowerCase() || el === selectionText.trim()
       );
     
       if (findItem) {
