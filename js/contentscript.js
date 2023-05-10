@@ -28,6 +28,8 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
       }
 
       if (wordItem && !pat && !ignorepat) {
+
+       
         var pos = replaceTypoQuotes(node.data).toUpperCase().indexOf(replaceTypoQuotes(wordItem).toUpperCase());
 
         if (pos >= 0) {
@@ -39,15 +41,24 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
           // spannode.appendChild(middleclone);
           // middlebit.parentNode.replaceChild(spannode, middlebit);
 
-          var spannode = document.createElement("span");
-          spannode.className = "sepllchecker-highlight";
-          spannode.innerHTML = wordItem;
+          // var spannode = document.createElement("span");
+          // spannode.className = "sepllchecker-highlight";
+          // spannode.innerHTML = wordItem;
 
-          var txt = $(node).text();
-          targetTxt = txt.replace(txt.substring(pos, pos + wordItem.length), spannode.outerHTML);
-          $(node).replaceWith(targetTxt)
+          // if (node.parentNode) {
+          //   var div = document.createElement('div');
+          //   node.parentNode.insertBefore(div, node)
+          //   // $(node).parentNode.insertBefore(div,node);
+          //   div.insertAdjacentHTML('afterend', node.data.replace(wordItem,`<span class="sepllchecker-highlight">${wordItem}</span>`));
+          //   node.remove();
+          //   div.remove();
+          // }
 
           skip = 1;
+          var txt = $(node).text();
+          targetTxt = txt.replace(txt.substring(pos, pos + wordItem.length), `<span class="sepllchecker-highlight">${wordItem}</span>`);
+          $(node).replaceWith(targetTxt)
+          return skip;
         }
       }
     }
@@ -64,19 +75,21 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
       }
       if (parentLang && locales.includes(parentLang.toLowerCase())) {
         var nodeData = decodeHTMLEntities(node.data);
-        nodeData.split(/[\s/+—–-]+/).map((el) => {
+        var words = nodeData.split(/[\s/+—–-]+/);
+        for (const el of words) {
           let wordItem = el.trim();
           if (wordItem) {
             skip = replaceText(wordItem, node, skip);
-          }
-          return el;
-        });
+            if (skip === 1) return 0;
+          } 
+        }
       }
     } else if (
       node.nodeType == 1 &&
       node.childNodes &&
       !/(script|style)/i.test(node.tagName) && 
-      !["TEXTAREA", "SELECT", "INPUT"].includes(node.tagName)
+      !["TEXTAREA", "SELECT", "INPUT"].includes(node.tagName) && 
+      !(node.tagName === 'SPAN' && node.className === 'sepllchecker-highlight')
     ) {
       for (var i = 0; i < node.childNodes.length; ++i) {
         i += innerHighlight(node.childNodes[i]);
@@ -171,8 +184,6 @@ async function initFileInfo() {
         }
       };
       xhr1.send();
-
-      console.log("highlit end");
     }
   };
   xhr.send();
