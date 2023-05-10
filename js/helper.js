@@ -52,19 +52,61 @@ function onlyUnique(value, index, array) {
 }
 
 function getWordVariations(str) {
-  let upperCaseStr, cappitalizedStr, lowerCaseStr;
+  let upperCaseStr, cappitalizedStr, lowerCaseStr, resArr = [];
   if (!str) return null;
+
+  // A word is all lowercase
+  if (str.toLowerCase() === str) {
+    resArr = [str];
+  }
+  // A word is all upppercase
   if (str === str.toUpperCase()) {
     upperCaseStr = str;
     cappitalizedStr = str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
     lowerCaseStr = str.toLowerCase();
-  } else {
-    upperCaseStr = str.toUpperCase();
-    cappitalizedStr = str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
-    lowerCaseStr = str.toLowerCase();
+    resArr = [str, upperCaseStr, cappitalizedStr, lowerCaseStr];
+  } else { // A word is written with an initial upppercase
+    if (str.charAt(0).toUpperCase() === str.charAt(0)) {
+      if (str.slice(1).toLowerCase() === str.slice(1)) { // rest in lowercase
+        cappitalizedStr = str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
+        lowerCaseStr = str.toLowerCase();
+        resArr = [str, cappitalizedStr, lowerCaseStr]
+      } else { // one or more letters in uppercase
+        upperCaseStr = str.toUpperCase();
+        cappitalizedStr = str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
+        lowerCaseStr = str.toLowerCase();
+        resArr = [str, upperCaseStr, cappitalizedStr, lowerCaseStr]
+      }
+    } else { // A word is written with an initial lowercase but one or more letters in uppercase
+      lowerCaseStr = str.toLowerCase();
+      resArr = [str, lowerCaseStr];
+    }
   }
 
-  var res = [upperCaseStr, cappitalizedStr, lowerCaseStr, str];
-  res = res.filter(onlyUnique);
+  var res = resArr.filter(onlyUnique);
   return res;
+}
+
+function binarySearch(arr,x)
+{
+  let l = 0, r = arr.length - 1;
+  while (l <= r) {
+      let m = l + Math.floor((r - l) / 2);
+
+      let res = x.localeCompare(arr[m]);
+          
+      // Check if x is present at mid
+      if (res == 0)
+          return m;
+
+      // If x greater, ignore left half
+      if (res > 0)
+          l = m + 1;
+
+      // If x is smaller, ignore right half
+      else
+          r = m - 1;
+  }
+
+  return -1;
 }
