@@ -45,8 +45,8 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
       }
 
       if (wordItem && !pat && !ignorepat) {
-        wordItem = escapeRegExp(wordItem);
-        var regex = '\\b(' + wordItem + ')\\b';
+        var escapeItem = escapeRegExp(wordItem);
+        var regex = '\\b(' + escapeItem + ')\\b';
         var pos = node.data.search(regex)
         if (pos >= 0) {
           skip = 1;
@@ -151,6 +151,9 @@ async function initFileInfo() {
     
       var lang = allText[0].toLowerCase().split(",");
       allText.splice(0, 1);
+      // allText.sort(function(a, b) {
+      //   return a.localeCompare(b, 'de' ,{sensitivity:'base'});
+      // })
 
       // Read ignorewords.txt file
       xhr1.open("GET", chrome.runtime.getURL("ignorewords.txt"), true);
