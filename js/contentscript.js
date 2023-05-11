@@ -5,60 +5,57 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
     if (!stripItem || stripItem.length < 2) {
       return skip;
     }
-    stripItem = removePeriod(stripItem);
-    if (!stripItem || stripItem.length < 2) {
+    let periodItem = removePeriod(stripItem);
+    if (!periodItem || periodItem.length < 2) {
       return skip;
     }
   
-    if (stripItem.includes("-")) {
-      stripItem.split("-").map((el) => {
+    if (wordItem.includes("-")) {
+      wordItem.split("-").map((el) => {
         skip = replaceText(el, node, skip);
       });
     } else {
       // Check if worditem exist in the wordlist
-      var pat = wordsList.includes(stripItem) || wordsList.includes(wordItem);
-      if (!pat) {
-        pat = wordsList.includes(stripItem.toLowerCase()) || wordsList.includes(wordItem.toLowerCase());
+      var l_wordItem, l_stripItem, l_periodItem
+      var pat = wordsList.includes(wordItem);
+
+      if (!pat && wordItem !== stripItem) pat = wordsList.includes(stripItem);
+      if (!pat && stripItem !== periodItem) pat = wordsList.includes(periodItem);
+      if (!pat && l_wordItem !== wordItem) {
+        var l_wordItem = wordItem.toLowerCase();
+        var l_stripItem = stripItem.toLowerCase();
+        var l_periodItem = periodItem.toLowerCase();
+
+        pat = wordsList.includes(l_wordItem);
+        if (!pat && l_stripItem !== l_wordItem) pat = wordsList.includes(l_stripItem);
+        if (!pat && l_stripItem !== l_periodItem) pat = wordsList.includes(l_periodItem);
       }
 
       // Check if worditem exist in the ignorelist
-      var ignorepat = ignoreList.includes(stripItem) || ignoreList.includes(wordItem);
-      if (!ignorepat) {
-        ignorepat = ignoreList.includes(stripItem.toLowerCase()) || ignoreList.includes(wordItem.toLowerCase());
+      var ignorepat = false;
+      if (!pat) {
+        var ignorepat = ignoreList.includes(wordItem);
+        if (!ignorepat && wordItem !== stripItem) ignorepat = ignoreList.includes(stripItem);
+        if (!ignorepat && stripItem !== periodItem) ignorepat = ignoreList.includes(periodItem);
+        if (!ignorepat && l_wordItem !== wordItem) {
+          ignorepat = ignoreList.includes(l_wordItem);
+          if (!ignorepat && l_stripItem !== l_wordItem) ignorepat = ignoreList.includes(l_stripItem);
+          if (!ignorepat && l_stripItem !== l_periodItem) ignorepat = ignoreList.includes(l_periodItem);
+        }
       }
 
       if (wordItem && !pat && !ignorepat) {
-
-       
         var pos = replaceTypoQuotes(node.data).toUpperCase().indexOf(replaceTypoQuotes(wordItem).toUpperCase());
-
         if (pos >= 0) {
-          // var spannode = document.createElement("span");
-          // spannode.className = "sepllchecker-highlight";
-          // var middlebit = node.splitText(pos);
-          // var endbit = middlebit.splitText(wordItem.length);
-          // var middleclone = middlebit.cloneNode(true);
-          // spannode.appendChild(middleclone);
-          // middlebit.parentNode.replaceChild(spannode, middlebit);
-
-          // var spannode = document.createElement("span");
-          // spannode.className = "sepllchecker-highlight";
-          // spannode.innerHTML = wordItem;
-
-          // if (node.parentNode) {
-          //   var div = document.createElement('div');
-          //   node.parentNode.insertBefore(div, node)
-          //   // $(node).parentNode.insertBefore(div,node);
-          //   div.insertAdjacentHTML('afterend', node.data.replace(wordItem,`<span class="sepllchecker-highlight">${wordItem}</span>`));
-          //   node.remove();
-          //   div.remove();
+          // var word  = getWordAt(node.data, pos);
+          // if (word === wordItem) {
+            skip = 1;
+            var txt = $(node).text();
+            var spanEl = `<span class="sepllchecker-highlight">${wordItem}</span>`;
+            targetTxt = txt.substr(0, pos) + spanEl + txt.substr(pos + wordItem.length);
+            $(node).replaceWith(targetTxt)
+            return skip; 
           // }
-
-          skip = 1;
-          var txt = $(node).text();
-          targetTxt = txt.replace(txt.substring(pos, pos + wordItem.length), `<span class="sepllchecker-highlight">${wordItem}</span>`);
-          $(node).replaceWith(targetTxt)
-          return skip;
         }
       }
     }
