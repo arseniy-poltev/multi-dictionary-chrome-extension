@@ -110,3 +110,7 @@ function binarySearch(arr,x)
 
   return -1;
 }
+
+function escapeRegExp(text) {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}

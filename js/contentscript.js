@@ -45,17 +45,16 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
       }
 
       if (wordItem && !pat && !ignorepat) {
-        var pos = replaceTypoQuotes(node.data).toUpperCase().indexOf(replaceTypoQuotes(wordItem).toUpperCase());
+        wordItem = escapeRegExp(wordItem);
+        var regex = '\\b(' + wordItem + ')\\b';
+        var pos = node.data.search(regex)
         if (pos >= 0) {
-          // var word  = getWordAt(node.data, pos);
-          // if (word === wordItem) {
-            skip = 1;
-            var txt = $(node).text();
-            var spanEl = `<span class="sepllchecker-highlight">${wordItem}</span>`;
-            targetTxt = txt.substr(0, pos) + spanEl + txt.substr(pos + wordItem.length);
-            $(node).replaceWith(targetTxt)
-            return skip; 
-          // }
+          skip = 1;
+          var txt = $(node).text();
+          var spanEl = `<span class="sepllchecker-highlight">${wordItem}</span>`;
+          targetTxt = txt.substr(0, pos) + spanEl + txt.substr(pos + wordItem.length);
+          $(node).replaceWith(targetTxt)
+          return skip;
         }
       }
     }
