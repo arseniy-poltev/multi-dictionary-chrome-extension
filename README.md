@@ -2,7 +2,7 @@
 
 - Create the folder c:\savetexttofile
 - Unpack the project into it
-- Replace wordlist.txt with the real file
+- Replace the wordlists in the folder `dictionary` with the real files
 - Right-click on install_host.bat, "Run as administrator"
 - Edit app\savetexttofile.bat
 ```
@@ -16,6 +16,6 @@
 - On the Chrome Extensions page, click on the Details button of the new Extensions
 - Click on the Options link
 - In the modal, ensure that "Application found" has a checkmark
-- Enter c:\savetexttofile as the local save directory, then click Save and close the modal.
+- Enter c:\savetexttofile\dictionary as the local save directory, then click Save and close the modal.
 - Browse to a web page and check if some words are highlighted.
 - Add a word and see if a popup appears about the word being added, and see if the word is added to wordlist.txt
