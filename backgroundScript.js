@@ -131,7 +131,7 @@ async function saveTextToFile(selectionText, locale, mode) {
 
 function createFileContents(wordsList, locales, mode, callback) {
 
-  var text = "";
+  var text = "\ufeff";
 
   if (mode === "ADD") {
     locales.forEach(function (el) {

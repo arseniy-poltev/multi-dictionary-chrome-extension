@@ -166,6 +166,7 @@ async function getFileInfo(name) {
 }
 
 function parseFile(str, localeInfo = false) {
+  str = new TextDecoder("utf8", { ignoreBOM: true }).decode(new TextEncoder("utf8").encode(str));
   str = str.trim();
   var allText = str.split("\r\n");
   var res;
