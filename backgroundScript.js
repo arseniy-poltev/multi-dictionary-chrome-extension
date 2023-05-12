@@ -78,11 +78,16 @@ async function saveTextToFile(selectionText, mode) {
       if (findItem) {
         // wordsList = wordsList.filter((el) => el.toUpperCase() !== selectionText.trim().toUpperCase());
       } else {
-        wordsList.push(selectionText.trim());
+        // wordsList.push(selectionText.trim());
+        var locale = items.locales[0].split(/[\s/_—–-]+/)[0].toLowerCase();
+        var insertPos = searchPosition(wordsList, selectionText.trim(), locale);
+        wordsList.splice(insertPos, 0, selectionText.trim())
       }
-      
+      // wordsList.sort(function(a, b) {
+      //   return a.localeCompare(b, {sensitivity:'base'});
+      // })
+
       createFileContents(
-        selectionText,
         wordsList,
         items.locales,
         mode,
@@ -108,7 +113,7 @@ async function saveTextToFile(selectionText, mode) {
   );
 }
 
-function createFileContents(selectionText, wordsList, locales, mode, callback) {
+function createFileContents(wordsList, locales, mode, callback) {
 
   var text = "";
 

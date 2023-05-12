@@ -16,39 +16,44 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
       });
     } else {
       // Check if worditem exist in the wordlist
+      var locale = locales[0].toLowerCase();
       var l_wordItem, l_stripItem, l_periodItem
-      var pat = wordsList.includes(wordItem);
+      var pat = binarySearch(wordsList, wordItem, locale);
 
-      if (!pat && wordItem !== stripItem) pat = wordsList.includes(stripItem);
-      if (!pat && stripItem !== periodItem) pat = wordsList.includes(periodItem);
+      if (!pat && wordItem !== stripItem) pat = binarySearch(wordsList, stripItem, locale);
+      if (!pat && stripItem !== periodItem) pat = binarySearch(wordsList, periodItem, locale);
       if (!pat && l_wordItem !== wordItem) {
         var l_wordItem = wordItem.toLowerCase();
         var l_stripItem = stripItem.toLowerCase();
         var l_periodItem = periodItem.toLowerCase();
 
-        pat = wordsList.includes(l_wordItem);
-        if (!pat && l_stripItem !== l_wordItem) pat = wordsList.includes(l_stripItem);
-        if (!pat && l_stripItem !== l_periodItem) pat = wordsList.includes(l_periodItem);
+        pat = binarySearch(wordsList, l_wordItem)
+        if (!pat && l_stripItem !== l_wordItem) pat = binarySearch(wordsList, l_stripItem, locale);
+        if (!pat && l_stripItem !== l_periodItem) pat = binarySearch(wordsList, l_periodItem, locale);
       }
 
       // Check if worditem exist in the ignorelist
       var ignorepat = false;
       if (!pat) {
-        var ignorepat = ignoreList.includes(wordItem);
-        if (!ignorepat && wordItem !== stripItem) ignorepat = ignoreList.includes(stripItem);
-        if (!ignorepat && stripItem !== periodItem) ignorepat = ignoreList.includes(periodItem);
+        var ignorepat = binarySearch(ignoreList, wordItem);
+        if (!ignorepat && wordItem !== stripItem) ignorepat = binarySearch(ignoreList, stripItem, locale);
+        if (!ignorepat && stripItem !== periodItem) ignorepat = binarySearch(ignoreList, periodItem, locale);
         if (!ignorepat && l_wordItem !== wordItem) {
-          ignorepat = ignoreList.includes(l_wordItem);
-          if (!ignorepat && l_stripItem !== l_wordItem) ignorepat = ignoreList.includes(l_stripItem);
-          if (!ignorepat && l_stripItem !== l_periodItem) ignorepat = ignoreList.includes(l_periodItem);
+          ignorepat = binarySearch(ignoreList, l_wordItem, locale);
+          if (!ignorepat && l_stripItem !== l_wordItem) ignorepat = binarySearch(ignoreList, l_stripItem, locale);
+          if (!ignorepat && l_stripItem !== l_periodItem) ignorepat = binarySearch(ignoreList, l_periodItem, locale);
         }
       }
 
       if (wordItem && !pat && !ignorepat) {
+        var nodeData = node.data;
         var escapeItem = escapeRegExp(wordItem);
         var regex = '\\b(' + escapeItem + ')\\b';
-        var pos = node.data.search(regex)
-        if (pos >= 0) {
+        var pos = nodeData.search(regex);
+        if (pos === -1) {
+          pos = nodeData.indexOf(wordItem);
+        }
+        if (pos > -1) {
           skip = 1;
           var txt = $(node).text();
           var spanEl = `<span class="sepllchecker-highlight">${wordItem}</span>`;
@@ -151,6 +156,7 @@ async function initFileInfo() {
     
       var lang = allText[0].toLowerCase().split(",");
       allText.splice(0, 1);
+
       // allText.sort(function(a, b) {
       //   return a.localeCompare(b, 'de' ,{sensitivity:'base'});
       // })

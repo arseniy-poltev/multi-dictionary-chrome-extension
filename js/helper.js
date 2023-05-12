@@ -87,17 +87,17 @@ function getWordVariations(str) {
   return res;
 }
 
-function binarySearch(arr,x)
+function binarySearch(arr, xm, locale = null)
 {
   let l = 0, r = arr.length - 1;
   while (l <= r) {
       let m = l + Math.floor((r - l) / 2);
 
-      let res = x.localeCompare(arr[m]);
+      let res = locale? xm.localeCompare(arr[m], locale, {sensitivity:'base'}): xm.localeCompare(arr[m], {sensitivity:'base'});
           
       // Check if x is present at mid
       if (res == 0)
-          return m;
+          return true;
 
       // If x greater, ignore left half
       if (res > 0)
@@ -108,9 +108,31 @@ function binarySearch(arr,x)
           r = m - 1;
   }
 
-  return -1;
+  return false;
 }
 
 function escapeRegExp(text) {
   return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
+
+function searchPosition(items, value, locale) {
+  let startIndex = 0;
+  let stopIndex = items.length - 1;
+  let middle = Math.floor((stopIndex + startIndex) / 2);
+
+  while (items[middle] != value && startIndex < stopIndex) {
+
+    var compareRes = value.localeCompare(items[middle], locale, {sensitivity:'base'})
+    //adjust search area
+    if (compareRes < 0) {
+      stopIndex = middle - 1;
+    } else if (compareRes > 0) {
+      startIndex = middle + 1;
+    }
+
+    //recalculate middle
+    middle = Math.floor((stopIndex + startIndex) / 2);
+  }
+
+  return middle;
 }
