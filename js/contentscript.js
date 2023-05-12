@@ -16,7 +16,7 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
       });
     } else {
       // Check if worditem exist in the wordlist
-      var locale = locales[0].toLowerCase();
+      var locale = locales[0].split(/[\s/_—–-]+/)[0].toLowerCase();;
       var l_wordItem, l_stripItem, l_periodItem
       var pat = binarySearch(wordsList, wordItem, locale);
 
@@ -27,7 +27,7 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
         var l_stripItem = stripItem.toLowerCase();
         var l_periodItem = periodItem.toLowerCase();
 
-        pat = binarySearch(wordsList, l_wordItem)
+        pat = binarySearch(wordsList, l_wordItem, locale)
         if (!pat && l_stripItem !== l_wordItem) pat = binarySearch(wordsList, l_stripItem, locale);
         if (!pat && l_stripItem !== l_periodItem) pat = binarySearch(wordsList, l_periodItem, locale);
       }
@@ -35,7 +35,7 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
       // Check if worditem exist in the ignorelist
       var ignorepat = false;
       if (!pat) {
-        var ignorepat = binarySearch(ignoreList, wordItem);
+        var ignorepat = binarySearch(ignoreList, wordItem, locale);
         if (!ignorepat && wordItem !== stripItem) ignorepat = binarySearch(ignoreList, stripItem, locale);
         if (!ignorepat && stripItem !== periodItem) ignorepat = binarySearch(ignoreList, periodItem, locale);
         if (!ignorepat && l_wordItem !== wordItem) {
