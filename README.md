@@ -1,14 +1,14 @@
+# Prerequisites
+
+- Have Python 3 installed and have it in your PATH
+- Simply type "python" in cmd.exe and check that the Python interpreter is found
+
 # Installation
 
 - Create the folder c:\savetexttofile
 - Unpack the project into it
 - Replace the wordlists in the folder `dictionary` with the real files
 - Right-click on install_host.bat, "Run as administrator"
-- Edit app\savetexttofile.bat
-```
-- python -u "c:\\savetexttofile\\app\\savetexttofile.py"
-+ c:\python39\python -u "c:\\savetexttofile\\app\\savetexttofile.py"
-```
 - In Chrome, click on "Manage extensions"
 - Choose "Load unpacked extension", browse to c:\savetexttofile, choose "Select folder"
 - In the Extensions page, copy the extension's ID to the clipboard
