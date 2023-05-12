@@ -115,11 +115,33 @@ function escapeRegExp(text) {
   return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 }
 
+function insertSorted(arr, item, locale) {
+  var comparator = function(a, b) {
+    return a.localeCompare(b, locale, { sensitivity: 'base'})
+  };
+
+  // get the index we need to insert the item at
+  var min = 0;
+  var max = arr.length;
+  var index = Math.floor((min + max) / 2);
+  while (max > min) {
+      if (comparator(item, arr[index]) < 0) {
+          max = index;
+      } else {
+          min = index + 1;
+      }
+      index = Math.floor((min + max) / 2);
+  }
+
+  // insert the item
+  arr.splice(index, 0, item);
+  return arr;
+}
+
 function searchPosition(items, value, locale) {
   let startIndex = 0;
   let stopIndex = items.length - 1;
   let middle = Math.floor((stopIndex + startIndex) / 2);
-
   while (items[middle] != value && startIndex < stopIndex) {
 
     var compareRes = value.localeCompare(items[middle], locale, {sensitivity:'base'})
@@ -135,4 +157,29 @@ function searchPosition(items, value, locale) {
   }
 
   return middle;
+}
+
+async function getFileInfo(name) {
+  const response = await fetch(chrome.runtime.getURL("dictionary/" + name));
+  const body = await response.text();
+  return body;
+}
+
+function parseFile(str, localeInfo = false) {
+  str = str.trim();
+  var allText = str.split("\r\n");
+  var res;
+  if (localeInfo) {
+    locales = allText[0].toLowerCase().split(",");
+    allText.splice(0, 1);
+    res = {
+      words: allText,
+      locales
+    }
+  } else {
+    res = {
+      words: allText,
+    }
+  }
+  return res;
 }

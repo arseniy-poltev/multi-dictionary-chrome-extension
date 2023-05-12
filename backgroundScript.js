@@ -6,8 +6,8 @@ const TEST_CONNECTIVITY_ACTION = "TEST_CONNECTIVITY";
 const SAVE_TEXT_ACTION = "SAVE";
 const NOTIFICATION_ID = "save-text-to-file-notification";
 const EXTENSION_TITLE = "Spell Checker";
-const TEXT_FILE_NAME = "wordlist.txt";
-const IGNORE_FILE_NAME = "ignorewords.txt";
+const TEXT_FILE_NAME = "words.txt";
+const IGNORE_FILE_NAME = "ignore.txt";
 
 var directory;
 var notifications;
@@ -16,12 +16,12 @@ var testConnectivityPayload = {
   action: TEST_CONNECTIVITY_ACTION,
 };
 
-function saveTextViaApp(directory, mode, fileContents, wordsList) {
+function saveTextViaApp(directory, mode, fileContents, wordsList, locale) {
   var fileName = "";
   if(mode === "ADD") {
-    fileName = TEXT_FILE_NAME;
+    fileName = locale + '-' + TEXT_FILE_NAME;
   } else {
-    fileName = IGNORE_FILE_NAME;
+    fileName = locale + '-' + IGNORE_FILE_NAME;
   }
   var payload = {
     action: SAVE_TEXT_ACTION,
@@ -43,10 +43,10 @@ function saveTextViaApp(directory, mode, fileContents, wordsList) {
         if (json.status === "Success") {
           if (mode === "ADD") {
             notify("Text added to the wordlist.");
-            chrome.storage.local.set({ wordsList: wordsList },function () {});
+            chrome.storage.local.set({ [`${locale}_words`]: wordsList },function () {});
           } else {
             notify("Text added to the ignorelist.");
-            chrome.storage.local.set({ ignoreWords: wordsList },function () {});
+            chrome.storage.local.set({ [`${locale}_ignore`]: wordsList },function () {});
           }
           // chrome.tabs.sendMessage(tabId, { message: "reload-page" });
         } else {
@@ -58,7 +58,7 @@ function saveTextViaApp(directory, mode, fileContents, wordsList) {
   );
 }
 
-async function saveTextToFile(selectionText, mode) {
+async function saveTextToFile(selectionText, locale, mode) {
   chrome.storage.local.get(
     {
       directory: "",
@@ -67,10 +67,29 @@ async function saveTextToFile(selectionText, mode) {
       wordsList: [],
       locales: [],
       ignoreWords: [],
+      en_words: [],
+      de_words: [],
+      en_locales: [],
+      de_locales: [],
+      en_ignore: [],
+      de_ignore: [],
     },
     function (items) {
 
-      let wordsList = mode === "ADD" ? items.wordsList : items.ignoreWords;
+      let wordsList, locales = locale === 'en' ? items.en_locales: items.de_locales;
+      if (mode === 'ADD') {
+        if (locale === 'en') {
+          wordsList = items.en_words;
+        } else {
+          wordsList = items.de_words;
+        }
+      } else {
+        if (locale === 'en') {
+          wordsList = items.en_ignore;
+        } else {
+          wordsList = items.de_ignore;
+        }
+      }
       let findItem = wordsList.find(
         (el) => el === selectionText.trim().toLowerCase() || el === selectionText.trim()
       );
@@ -79,17 +98,14 @@ async function saveTextToFile(selectionText, mode) {
         // wordsList = wordsList.filter((el) => el.toUpperCase() !== selectionText.trim().toUpperCase());
       } else {
         // wordsList.push(selectionText.trim());
-        var locale = items.locales[0].split(/[\s/_—–-]+/)[0].toLowerCase();
-        var insertPos = searchPosition(wordsList, selectionText.trim(), locale);
-        wordsList.splice(insertPos, 0, selectionText.trim())
+        // var insertPos = searchPosition(wordsList, selectionText.trim(), locale);
+        // wordsList.splice(insertPos, 0, selectionText.trim())
+        wordsList = insertSorted(wordsList, selectionText.trim(), locale);
       }
-      // wordsList.sort(function(a, b) {
-      //   return a.localeCompare(b, {sensitivity:'base'});
-      // })
 
       createFileContents(
         wordsList,
-        items.locales,
+        locales,
         mode,
         function (fileContents) {
           chrome.runtime.sendNativeMessage(
@@ -102,7 +118,7 @@ async function saveTextToFile(selectionText, mode) {
               } else {
                 var responseObject = JSON.parse(response);
                 if (responseObject.status === "Success") {
-                  saveTextViaApp(directory, mode, fileContents, wordsList);
+                  saveTextViaApp(directory, mode, fileContents, wordsList, locale);
                 }
               }
             }
@@ -153,7 +169,14 @@ chrome.storage.local.get(
     notifications: true,
     conflictAction: "uniquify",
     wordsList: [],
+    locales: [],
     ignoreWords: [],
+    en_words: [],
+    de_words: [],
+    en_locales: [],
+    de_locales: [],
+    en_ignore: [],
+    de_ignore: [],
   },
   function (items) {
     directory = items.directory;
@@ -217,12 +240,13 @@ chrome.runtime.onInstalled.addListener(function (details) {
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   let selectionText = request.data;
+  let locale = request.locale;
   if (request.type === "ACTIVITY_ADD_TEXT") {
-    saveTextToFile(selectionText, "ADD");
+    saveTextToFile(selectionText, locale, "ADD");
   }
   
   if (request.type === "ACTIVITY_IGNORE_TEXT") {
-    saveTextToFile(selectionText, "IGNORE");
+    saveTextToFile(selectionText, locale, "IGNORE");
   }
   sendResponse();
 });

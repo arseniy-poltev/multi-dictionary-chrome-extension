@@ -29,7 +29,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["wordlist.txt", "ignorewords.txt"],
+      "resources": ["dictionary/en-words.txt", "dictionary/de-words.txt", "dictionary/en-ignore.txt", "dictionary/de-ignore.txt"],
       "matches": ["<all_urls>"]
     }
   ],

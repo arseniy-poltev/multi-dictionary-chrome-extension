@@ -1,4 +1,5 @@
-jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
+jQuery.fn.highlight = function (data) {
+  var { en_words, de_words, en_locales, de_locales, en_ignore, de_ignore } = data;
   function replaceText(wordItem, node, skip) {
     let stripItem = removeSpeCharaceters(wordItem);
 
@@ -16,7 +17,17 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
       });
     } else {
       // Check if worditem exist in the wordlist
-      var locale = locales[0].split(/[\s/_—–-]+/)[0].toLowerCase();;
+      var parentEl = $(node).closest("[lang]").attr("lang");
+      var locale = parentEl.toLowerCase().split(/[\s/_—–-]+/)[0].toLowerCase();
+      var wordsList, ignoreList;
+      if (locale === en_locales[0].split(/[\s/_—–-]+/)[0].toLowerCase()) {
+        wordsList = en_words;
+        ignoreList = en_ignore;
+      } else {
+        wordsList = de_words;
+        ignoreList = de_ignore;
+      }
+
       var l_wordItem, l_stripItem, l_periodItem
       var pat = binarySearch(wordsList, wordItem, locale);
 
@@ -56,7 +67,7 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
         if (pos > -1) {
           skip = 1;
           var txt = $(node).text();
-          var spanEl = `<span class="sepllchecker-highlight">${wordItem}</span>`;
+          var spanEl = `<span class="sepllchecker-highlight" data-locale="${locale}">${wordItem}</span>`;
           targetTxt = txt.substr(0, pos) + spanEl + txt.substr(pos + wordItem.length);
           $(node).replaceWith(targetTxt)
           return skip;
@@ -74,15 +85,18 @@ jQuery.fn.highlight = function (wordsList, locales, ignoreList) {
       if (parent) {
         var parentLang = parent.attr("lang");
       }
-      if (parentLang && locales.includes(parentLang.toLowerCase())) {
-        var nodeData = decodeHTMLEntities(node.data);
-        var words = nodeData.split(/[\s/+—–-]+/);
-        for (const el of words) {
-          let wordItem = el.trim();
-          if (wordItem) {
-            skip = replaceText(wordItem, node, skip);
-            if (skip === 1) return 0;
-          } 
+      if (parentLang) {
+        var p_lang = parentLang.toLowerCase();
+        if (en_locales.includes(p_lang) || de_locales.includes(p_lang)) {
+          var nodeData = decodeHTMLEntities(node.data);
+          var words = nodeData.split(/[\s/+—–-]+/);
+          for (const el of words) {
+            let wordItem = el.trim();
+            if (wordItem) {
+              skip = replaceText(wordItem, node, skip);
+              if (skip === 1) return 0;
+            } 
+          }
         }
       }
     } else if (
@@ -142,56 +156,85 @@ jQuery.fn.removeHighlight = function () {
 };
 
 async function initFileInfo() {
-  console.log("loading start");
-  var xhr = new XMLHttpRequest();
-  var xhr1 = new XMLHttpRequest();
+  var en_wordsTxt = await getFileInfo('en-words.txt');
+  var de_wordsTxt = await getFileInfo('de-words.txt');
+  var en_ignoreTxt = await getFileInfo('en-ignore.txt');
+  var de_ignoreTxt = await getFileInfo('de-ignore.txt');
 
-  // Read wordlist.txt
-  xhr.open("GET", chrome.runtime.getURL("wordlist.txt"), true);
-  xhr.onreadystatechange = function () {
-    var status = xhr.status;
-    if (xhr.readyState == XMLHttpRequest.DONE && status == 200) {
-      var allText = xhr.responseText.split("\r\n");
-      console.log("highlight start");
-    
-      var lang = allText[0].toLowerCase().split(",");
-      allText.splice(0, 1);
+  var enWordsInfo = parseFile(en_wordsTxt, true);
+  var deWordsInfo = parseFile(de_wordsTxt, true);
 
-      // allText.sort(function(a, b) {
-      //   return a.localeCompare(b, 'de' ,{sensitivity:'base'});
-      // })
+  var enIgnoreWords = parseFile(en_ignoreTxt);
+  var deIgnoreWords = parseFile(de_ignoreTxt);
 
-      // Read ignorewords.txt file
-      xhr1.open("GET", chrome.runtime.getURL("ignorewords.txt"), true);
-      xhr1.onreadystatechange = function () {
-        var status = xhr1.status;
-        if (xhr1.readyState == XMLHttpRequest.DONE && status == 200) {
-          var ignoreList = xhr1.responseText.split("\r\n");
-          
-          var startTime = new Date().getTime();
-          $("body").highlight(allText, lang, ignoreList);
-          var endTime = new Date().getTime();
-          
-          console.log("highlight end");
-          console.log(`timeDiff`, endTime - startTime)
-          
-          initContextMenu();
-          chrome.storage.local.set(
-            {
-              wordsList: allText,
-              ignoreWords: ignoreList,
-              locales: lang,
-            },
-            function () {
-              console.log("storage sync success");
-            }
-          );
-        }
-      };
-      xhr1.send();
-    }
+  var resMap =  {
+    en_words: enWordsInfo.words,
+    de_words: deWordsInfo.words,
+    en_locales: enWordsInfo.locales,
+    de_locales: deWordsInfo.locales,
+    en_ignore: enIgnoreWords.words,
+    de_ignore: deIgnoreWords.words,
   };
-  xhr.send();
+
+  $("body").highlight(resMap);
+
+  initContextMenu();
+  chrome.storage.local.set(
+    resMap,
+    function () {
+      console.log("storage sync success");
+    }
+  );
+  // console.log("loading start");
+  // var xhr = new XMLHttpRequest();
+  // var xhr1 = new XMLHttpRequest();
+
+  // // Read wordlist.txt
+  // xhr.open("GET", chrome.runtime.getURL("wordlist.txt"), true);
+  // xhr.onreadystatechange = function () {
+  //   var status = xhr.status;
+  //   if (xhr.readyState == XMLHttpRequest.DONE && status == 200) {
+  //     var allText = xhr.responseText.split("\r\n");
+  //     console.log("highlight start");
+    
+  //     var lang = allText[0].toLowerCase().split(",");
+  //     allText.splice(0, 1);
+
+  //     // allText.sort(function(a, b) {
+  //     //   return a.localeCompare(b, 'de' ,{sensitivity:'base'});
+  //     // })
+
+  //     // Read ignorewords.txt file
+  //     xhr1.open("GET", chrome.runtime.getURL("ignorewords.txt"), true);
+  //     xhr1.onreadystatechange = function () {
+  //       var status = xhr1.status;
+  //       if (xhr1.readyState == XMLHttpRequest.DONE && status == 200) {
+  //         var ignoreList = xhr1.responseText.split("\r\n");
+          
+  //         var startTime = new Date().getTime();
+  //         $("body").highlight(allText, lang, ignoreList);
+  //         var endTime = new Date().getTime();
+          
+  //         console.log("highlight end");
+  //         console.log(`timeDiff`, endTime - startTime)
+          
+  //         initContextMenu();
+  //         chrome.storage.local.set(
+  //           {
+  //             wordsList: allText,
+  //             ignoreWords: ignoreList,
+  //             locales: lang,
+  //           },
+  //           function () {
+  //             console.log("storage sync success");
+  //           }
+  //         );
+  //       }
+  //     };
+  //     xhr1.send();
+  //   }
+  // };
+  // xhr.send();
 }
 
 chrome.runtime.onMessage.addListener(function (request, sender) {
@@ -223,6 +266,8 @@ function initContextMenu() {
         // this callback is executed every time the menu is to be shown
         // its results are destroyed every time the menu is hidden
         var el = e.target;
+        var locale = $(el).data('locale');
+        var lang = locale === 'en' ? "English": "German"
         var optionText = replaceTypoQuotes(decodeHTMLEntities(($(el).text())));
 
         var items = {};
@@ -235,27 +280,27 @@ function initContextMenu() {
         
         var optionList = getWordVariations(optionText);
         optionList.forEach(el => {
-          items["add_" + el] = { name: 'Add "' + el + '"' };  
+          items["add_" + el] = { name: `Add "${el}" (${lang})` };  
         });
 
         if (removedText) {
           items["sep1"] = "---------";
           periodOptionList = getWordVariations(removedText);
           periodOptionList.forEach(el => {
-            items["add_" + el] = { name: 'Add "' + el + '"' };  
+            items["add_" + el] = { name: `Add "${el}" (${lang})` };  
           });
         }
 
         items["sep2"] = "---------";
         
         optionList.forEach(el => {
-          items["ignore_" + el] = { name: 'Ignore "' + el + '"' };  
+          items["ignore_" + el] = { name: `Ignore "${el}" (${lang})`};  
         });
 
         if (periodOptionList) {
           items["sep3"] = "---------";
           periodOptionList.forEach(el => {
-            items["ignore_" + el] = { name: 'Ignore "' + el + '"' };  
+            items["ignore_" + el] = { name: `Ignore "${el}" (${lang})`};  
           });
         }
 
@@ -267,6 +312,7 @@ function initContextMenu() {
                 {
                   type: "ACTIVITY_ADD_TEXT",
                   data: str,
+                  locale
                 },
                 function () {
                   $(el)[0].parentNode.replaceChild(document.createTextNode($(el).text()), $(el)[0]);
@@ -278,6 +324,7 @@ function initContextMenu() {
                 {
                   type: "ACTIVITY_IGNORE_TEXT",
                   data: str,
+                  locale
                 },
                 function () {
                   $(el)[0].parentNode.replaceChild(document.createTextNode($(el).text()), $(el)[0]);

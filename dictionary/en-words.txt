@@ -1,4 +1,4 @@
-en,en-us,en-gb,en-ca,en-au,en-nz
+﻿en,en-us,en-gb,en-ca,en-au,en-nz
 0
 0th
 1
