@@ -168,7 +168,7 @@ async function getFileInfo(name) {
 function parseFile(str, localeInfo = false) {
   str = new TextDecoder("utf8", { ignoreBOM: true }).decode(new TextEncoder("utf8").encode(str));
   str = str.trim();
-  var allText = str.split("\r\n");
+  var allText = str.split(/\r?\n/g);
   var res;
   if (localeInfo) {
     locales = allText[0].toLowerCase().split(",");
