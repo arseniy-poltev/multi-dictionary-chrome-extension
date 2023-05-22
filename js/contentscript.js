@@ -278,6 +278,9 @@ function initContextMenu() {
           });
         }
 
+        items["sep4"] = "---------";
+        items[`sort_${locale.toLowerCase()}`] = { name: `Sort (${locale.toUpperCase()})`}
+
         return {
           callback: function (key, options) {
             if (key.startsWith("add_")) {
@@ -303,6 +306,16 @@ function initContextMenu() {
                 function () {
                   $(el)[0].parentNode.replaceChild(document.createTextNode($(el).text()), $(el)[0]);
                 }
+              );
+            } else if (key.startsWith("sort_")) {
+              var str = key.substring("sort_".length);
+              chrome.runtime.sendMessage(
+                {
+                  type: "ACTIVITY_SORT_WORDS",
+                  data: str,
+                  locale
+                },
+                function () {}
               );
             }
           },

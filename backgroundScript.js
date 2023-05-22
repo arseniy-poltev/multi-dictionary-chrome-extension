@@ -18,7 +18,7 @@ var testConnectivityPayload = {
 
 function saveTextViaApp(directory, mode, fileContents, wordsList, locale) {
   var fileName = "";
-  if(mode === "ADD") {
+  if(mode === "ADD" || mode === "SORT") {
     fileName = locale + '-' + TEXT_FILE_NAME;
   } else {
     fileName = locale + '-' + IGNORE_FILE_NAME;
@@ -49,13 +49,16 @@ function saveTextViaApp(directory, mode, fileContents, wordsList, locale) {
               dictionary: {}
             },
             function (items) {
+              var dictionary = items.dictionary;
               if (mode === "ADD") {
                 notify("Text added to the wordlist.");
-                var dictionary = items.dictionary;
                 dictionary = { ...dictionary, [`${locale}_words`]: wordsList }
-              } else {
+              } else if (mode === "IGNORE"){
                 notify("Text added to the ignorelist.");
                 dictionary = { ...dictionary, [`${locale}_ignore`]: wordsList }
+              } else if(mode === "SORT") {
+                notify("Wordlist sorted successfully.");
+                dictionary = { ...dictionary, [`${locale}_words`]: wordsList }
               }
               chrome.storage.local.set({ dictionary },function () {});
             }
@@ -83,16 +86,24 @@ async function saveTextToFile(selectionText, locale, mode) {
       let wordsList, locales = items.dictionary[`${locale}_locales`];
       if (mode === 'ADD') {
         wordsList = items.dictionary[`${locale}_words`];
-      } else {
+      } else if (mode === "IGNORE"){
         wordsList = items.dictionary[`${locale}_ignore`];
+      } else if (mode === "SORT") {
+        wordsList = items.dictionary[`${locale}_words`];
+        wordsList.sort(function(a, b) {
+          return a.localeCompare(b, locale,  {sensitivity:'variant'});
+        })
       }
-      let findItem = wordsList.find(
-        (el) => el === selectionText.trim().toLowerCase() || el === selectionText.trim()
-      );
-    
-      if (findItem) {
-      } else {
-        wordsList = insertSorted(wordsList, selectionText.trim(), locale);
+      
+      if (mode === "ADD" || mode === "IGNORE") {
+        let findItem = wordsList.find(
+          (el) => el === selectionText.trim().toLowerCase() || el === selectionText.trim()
+        );
+      
+        if (findItem) {
+        } else {
+          wordsList = insertSorted(wordsList, selectionText.trim(), locale);
+        }
       }
 
       createFileContents(
@@ -125,7 +136,7 @@ function createFileContents(wordsList, locales, mode, callback) {
 
   var text = "\ufeff";
 
-  if (mode === "ADD") {
+  if (mode === "ADD" || mode === "SORT") {
     locales.forEach(function (el) {
       text += el + ",";
     });
@@ -230,6 +241,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   
   if (request.type === "ACTIVITY_IGNORE_TEXT") {
     saveTextToFile(selectionText, locale, "IGNORE");
+  }
+
+  if (request.type === "ACTIVITY_SORT_WORDS") {
+    saveTextToFile("", locale, "SORT");
   }
   sendResponse();
 });
