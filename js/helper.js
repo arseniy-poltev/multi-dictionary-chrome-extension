@@ -93,7 +93,7 @@ function binarySearch(arr, xm, locale = null)
   while (l <= r) {
       let m = l + Math.floor((r - l) / 2);
 
-      let res = locale? xm.localeCompare(arr[m], locale, {sensitivity:'base'}): xm.localeCompare(arr[m], {sensitivity:'base'});
+      let res = locale? xm.localeCompare(arr[m], locale, {sensitivity:'variant'}): xm.localeCompare(arr[m], {sensitivity:'variant'});
           
       // Check if x is present at mid
       if (res == 0)
@@ -117,7 +117,7 @@ function escapeRegExp(text) {
 
 function insertSorted(arr, item, locale) {
   var comparator = function(a, b) {
-    return a.localeCompare(b, locale, { sensitivity: 'base'})
+    return a.localeCompare(b, locale, { sensitivity: 'variant'})
   };
 
   // get the index we need to insert the item at
@@ -144,7 +144,7 @@ function searchPosition(items, value, locale) {
   let middle = Math.floor((stopIndex + startIndex) / 2);
   while (items[middle] != value && startIndex < stopIndex) {
 
-    var compareRes = value.localeCompare(items[middle], locale, {sensitivity:'base'})
+    var compareRes = value.localeCompare(items[middle], locale, {sensitivity:'variant'})
     //adjust search area
     if (compareRes < 0) {
       stopIndex = middle - 1;
