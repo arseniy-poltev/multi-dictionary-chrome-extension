@@ -1,5 +1,11 @@
-jQuery.fn.highlight = function (data) {
-  var { en_words, de_words, en_locales, de_locales, en_ignore, de_ignore } = data;
+jQuery.fn.highlight = function (data, locales) {
+  var localeArr = [];
+  locales.forEach((el) => {
+    if (data[`${el}_locales`]) {
+      localeArr = [...localeArr, ...data[`${el}_locales`]] 
+    }
+  });
+
   function replaceText(wordItem, node, skip) {
     let stripItem = removeSpeCharaceters(wordItem);
 
@@ -19,14 +25,8 @@ jQuery.fn.highlight = function (data) {
       // Check if worditem exist in the wordlist
       var parentEl = $(node).closest("[lang]").attr("lang");
       var locale = parentEl.toLowerCase().split(/[\s/_—–-]+/)[0].toLowerCase();
-      var wordsList, ignoreList;
-      if (locale === en_locales[0].split(/[\s/_—–-]+/)[0].toLowerCase()) {
-        wordsList = en_words;
-        ignoreList = en_ignore;
-      } else {
-        wordsList = de_words;
-        ignoreList = de_ignore;
-      }
+      var wordsList = data[`${locale}_words`];
+      var ignoreList = data[`${locale}_ignore`];
 
       var l_wordItem, l_stripItem, l_periodItem
       var pat = binarySearch(wordsList, wordItem, locale);
@@ -87,7 +87,7 @@ jQuery.fn.highlight = function (data) {
       }
       if (parentLang) {
         var p_lang = parentLang.toLowerCase();
-        if (en_locales.includes(p_lang) || de_locales.includes(p_lang)) {
+        if (localeArr.includes(p_lang)) {
           var nodeData = decodeHTMLEntities(node.data);
           var words = nodeData.split(/[\s/+—–-]+/);
           for (const el of words) {
@@ -155,86 +155,61 @@ jQuery.fn.removeHighlight = function () {
     .end();
 };
 
+async function getFileInfo(name) {
+  const response = await fetch(chrome.runtime.getURL("dictionary/" + name));
+  const body = await response.text();
+  return body;
+}
+
 async function initFileInfo() {
-  var en_wordsTxt = await getFileInfo('en-words.txt');
-  var de_wordsTxt = await getFileInfo('de-words.txt');
-  var en_ignoreTxt = await getFileInfo('en-ignore.txt');
-  var de_ignoreTxt = await getFileInfo('de-ignore.txt');
+    var langEls = $('*[lang]');
+    var locales = [];
+    langEls.each((index, el) => {
+      var langAttr = $(el).attr('lang');
+      if (langAttr) {
+        var locale = $(el).attr('lang').split(/[\s/_—–-]+/)[0];
+        locales.push(locale.toLowerCase());
+      } 
+    });
 
-  var enWordsInfo = parseFile(en_wordsTxt, true);
-  var deWordsInfo = parseFile(de_wordsTxt, true);
+    locales = [...new Set(locales)];
 
-  var enIgnoreWords = parseFile(en_ignoreTxt);
-  var deIgnoreWords = parseFile(de_ignoreTxt);
+    var resMap = {};
+    await Promise.all(locales.map(async (lc) => {
+      try {
+        var wordsTxt = await getFileInfo(`${lc}-words.txt`);
+        if (wordsTxt) {
+          var wordsInfo = parseFile(wordsTxt, true);
+          // var wordsItems = wordsInfo.words
+          // wordsItems.sort(function(a, b) {
+          //     return a.localeCompare(b, 'en');
+          //   })
+          // resMap[`${lc}_words`] = wordsItems;
+          resMap[`${lc}_words`] = wordsInfo.words;
+          resMap[`${lc}_locales`] = wordsInfo.locales;
+        }
+        
+        var ignoreTxt = await getFileInfo(`${lc}-ignore.txt`);
+        if (ignoreTxt) {
+          var ignoreInfo = parseFile(ignoreTxt, true);
+          resMap[`${lc}_ignore`] = ignoreInfo.words;
+        } else {
+          resMap[`${lc}_ignore`] = [];
+        }
+      } catch (error) {
+        // console.log(error)
+      }
+    }));
 
-  var resMap =  {
-    en_words: enWordsInfo.words,
-    de_words: deWordsInfo.words,
-    en_locales: enWordsInfo.locales,
-    de_locales: deWordsInfo.locales,
-    en_ignore: enIgnoreWords.words,
-    de_ignore: deIgnoreWords.words,
-  };
-
-  $("body").highlight(resMap);
-
-  initContextMenu();
-  chrome.storage.local.set(
-    resMap,
-    function () {
-      console.log("storage sync success");
-    }
-  );
-  // console.log("loading start");
-  // var xhr = new XMLHttpRequest();
-  // var xhr1 = new XMLHttpRequest();
-
-  // // Read wordlist.txt
-  // xhr.open("GET", chrome.runtime.getURL("wordlist.txt"), true);
-  // xhr.onreadystatechange = function () {
-  //   var status = xhr.status;
-  //   if (xhr.readyState == XMLHttpRequest.DONE && status == 200) {
-  //     var allText = xhr.responseText.split("\r\n");
-  //     console.log("highlight start");
-    
-  //     var lang = allText[0].toLowerCase().split(",");
-  //     allText.splice(0, 1);
-
-  //     // allText.sort(function(a, b) {
-  //     //   return a.localeCompare(b, 'de' ,{sensitivity:'base'});
-  //     // })
-
-  //     // Read ignorewords.txt file
-  //     xhr1.open("GET", chrome.runtime.getURL("ignorewords.txt"), true);
-  //     xhr1.onreadystatechange = function () {
-  //       var status = xhr1.status;
-  //       if (xhr1.readyState == XMLHttpRequest.DONE && status == 200) {
-  //         var ignoreList = xhr1.responseText.split("\r\n");
-          
-  //         var startTime = new Date().getTime();
-  //         $("body").highlight(allText, lang, ignoreList);
-  //         var endTime = new Date().getTime();
-          
-  //         console.log("highlight end");
-  //         console.log(`timeDiff`, endTime - startTime)
-          
-  //         initContextMenu();
-  //         chrome.storage.local.set(
-  //           {
-  //             wordsList: allText,
-  //             ignoreWords: ignoreList,
-  //             locales: lang,
-  //           },
-  //           function () {
-  //             console.log("storage sync success");
-  //           }
-  //         );
-  //       }
-  //     };
-  //     xhr1.send();
-  //   }
-  // };
-  // xhr.send();
+    $("body").highlight(resMap, locales);
+    initContextMenu();
+    chrome.storage.local.set({
+        dictionary: resMap
+      },
+      function () {
+        console.log("storage sync success");
+      }
+    );
 }
 
 chrome.runtime.onMessage.addListener(function (request, sender) {
@@ -267,7 +242,6 @@ function initContextMenu() {
         // its results are destroyed every time the menu is hidden
         var el = e.target;
         var locale = $(el).data('locale');
-        var lang = locale === 'en' ? "English": "German"
         var optionText = replaceTypoQuotes(decodeHTMLEntities(($(el).text())));
 
         var items = {};
@@ -280,27 +254,27 @@ function initContextMenu() {
         
         var optionList = getWordVariations(optionText);
         optionList.forEach(el => {
-          items["add_" + el] = { name: `Add "${el}" (${lang})` };  
+          items["add_" + el] = { name: `Add "${el}" (${locale.toUpperCase()})` };  
         });
 
         if (removedText) {
           items["sep1"] = "---------";
           periodOptionList = getWordVariations(removedText);
           periodOptionList.forEach(el => {
-            items["add_" + el] = { name: `Add "${el}" (${lang})` };  
+            items["add_" + el] = { name: `Add "${el}" (${locale.toUpperCase()})` };  
           });
         }
 
         items["sep2"] = "---------";
         
         optionList.forEach(el => {
-          items["ignore_" + el] = { name: `Ignore "${el}" (${lang})`};  
+          items["ignore_" + el] = { name: `Ignore "${el}" (${locale.toUpperCase()})`};  
         });
 
         if (periodOptionList) {
           items["sep3"] = "---------";
           periodOptionList.forEach(el => {
-            items["ignore_" + el] = { name: `Ignore "${el}" (${lang})`};  
+            items["ignore_" + el] = { name: `Ignore "${el}" (${locale.toUpperCase()})`};  
           });
         }
 

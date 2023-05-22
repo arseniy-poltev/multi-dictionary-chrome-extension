@@ -41,14 +41,25 @@ function saveTextViaApp(directory, mode, fileContents, wordsList, locale) {
       } else {
         var json = JSON.parse(response);
         if (json.status === "Success") {
-          if (mode === "ADD") {
-            notify("Text added to the wordlist.");
-            chrome.storage.local.set({ [`${locale}_words`]: wordsList },function () {});
-          } else {
-            notify("Text added to the ignorelist.");
-            chrome.storage.local.set({ [`${locale}_ignore`]: wordsList },function () {});
-          }
-          // chrome.tabs.sendMessage(tabId, { message: "reload-page" });
+          chrome.storage.local.get(
+            {
+              directory: "",
+              notifications: true,
+              conflictAction: "uniquify",
+              dictionary: {}
+            },
+            function (items) {
+              if (mode === "ADD") {
+                notify("Text added to the wordlist.");
+                var dictionary = items.dictionary;
+                dictionary = { ...dictionary, [`${locale}_words`]: wordsList }
+              } else {
+                notify("Text added to the ignorelist.");
+                dictionary = { ...dictionary, [`${locale}_ignore`]: wordsList }
+              }
+              chrome.storage.local.set({ dictionary },function () {});
+            }
+          );
         } else {
           notify("Error occured saving text via host application. Check browser console.");
           console.log("SaveTextToFile: Native application response: " + response);
@@ -64,42 +75,23 @@ async function saveTextToFile(selectionText, locale, mode) {
       directory: "",
       notifications: true,
       conflictAction: "uniquify",
-      wordsList: [],
-      locales: [],
       ignoreWords: [],
-      en_words: [],
-      de_words: [],
-      en_locales: [],
-      de_locales: [],
-      en_ignore: [],
-      de_ignore: [],
+      dictionary: {}
     },
     function (items) {
 
-      let wordsList, locales = locale === 'en' ? items.en_locales: items.de_locales;
+      let wordsList, locales = items.dictionary[`${locale}_locales`];
       if (mode === 'ADD') {
-        if (locale === 'en') {
-          wordsList = items.en_words;
-        } else {
-          wordsList = items.de_words;
-        }
+        wordsList = items.dictionary[`${locale}_words`];
       } else {
-        if (locale === 'en') {
-          wordsList = items.en_ignore;
-        } else {
-          wordsList = items.de_ignore;
-        }
+        wordsList = items.dictionary[`${locale}_ignore`];
       }
       let findItem = wordsList.find(
         (el) => el === selectionText.trim().toLowerCase() || el === selectionText.trim()
       );
     
       if (findItem) {
-        // wordsList = wordsList.filter((el) => el.toUpperCase() !== selectionText.trim().toUpperCase());
       } else {
-        // wordsList.push(selectionText.trim());
-        // var insertPos = searchPosition(wordsList, selectionText.trim(), locale);
-        // wordsList.splice(insertPos, 0, selectionText.trim())
         wordsList = insertSorted(wordsList, selectionText.trim(), locale);
       }
 
@@ -168,15 +160,6 @@ chrome.storage.local.get(
     directory: "",
     notifications: true,
     conflictAction: "uniquify",
-    wordsList: [],
-    locales: [],
-    ignoreWords: [],
-    en_words: [],
-    de_words: [],
-    en_locales: [],
-    de_locales: [],
-    en_ignore: [],
-    de_ignore: [],
   },
   function (items) {
     directory = items.directory;
@@ -232,7 +215,7 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
 chrome.runtime.onInstalled.addListener(function (details) {
   if (details.reason === "install") {
     chrome.tabs.create({
-      url: chrome.extension.getURL("options.html"),
+      url: chrome.runtime.getURL("options.html"),
     });
   }
 });

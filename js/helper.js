@@ -89,6 +89,7 @@ function getWordVariations(str) {
 
 function binarySearch(arr, xm, locale = null)
 {
+  if (!arr || arr.length === 0) return false;
   let l = 0, r = arr.length - 1;
   while (l <= r) {
       let m = l + Math.floor((r - l) / 2);
@@ -157,12 +158,6 @@ function searchPosition(items, value, locale) {
   }
 
   return middle;
-}
-
-async function getFileInfo(name) {
-  const response = await fetch(chrome.runtime.getURL("dictionary/" + name));
-  const body = await response.text();
-  return body;
 }
 
 function parseFile(str, localeInfo = false) {
