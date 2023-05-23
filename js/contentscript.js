@@ -6,6 +6,29 @@ jQuery.fn.highlight = function (data, locales) {
     }
   });
 
+  function searchWord(wordsList, wordItem, stripItem, periodItem, locale, lowPriority) {
+    if (lowPriority) {
+      wordItem = `~${wordItem}`;
+      stripItem = `~${stripItem}`;
+      periodItem = `~${periodItem}`;
+    }
+
+    var pat = binarySearch(wordsList, wordItem, locale);
+    if (!pat && wordItem !== stripItem) pat = binarySearch(wordsList, stripItem, locale);
+    if (!pat && stripItem !== periodItem) pat = binarySearch(wordsList, periodItem, locale);
+    if (!pat) {
+      var l_wordItem = wordItem.toLowerCase();
+      var l_stripItem = stripItem.toLowerCase();
+      var l_periodItem = periodItem.toLowerCase();
+
+      pat = binarySearch(wordsList, l_wordItem, locale)
+      if (!pat && l_stripItem !== l_wordItem) pat = binarySearch(wordsList, l_stripItem, locale);
+      if (!pat && l_stripItem !== l_periodItem) pat = binarySearch(wordsList, l_periodItem, locale);
+    }
+
+    return pat;
+  }
+
   function replaceText(wordItem, node, skip) {
     let stripItem = removeSpeCharaceters(wordItem);
 
@@ -26,38 +49,25 @@ jQuery.fn.highlight = function (data, locales) {
       var parentEl = $(node).closest("[lang]").attr("lang");
       var locale = parentEl.toLowerCase().split(/[\s/_—–-]+/)[0].toLowerCase();
       var wordsList = data[`${locale}_words`];
-      var ignoreList = data[`${locale}_ignore`];
 
-      var l_wordItem, l_stripItem, l_periodItem
-      var pat = binarySearch(wordsList, wordItem, locale);
-
-      if (!pat && wordItem !== stripItem) pat = binarySearch(wordsList, stripItem, locale);
-      if (!pat && stripItem !== periodItem) pat = binarySearch(wordsList, periodItem, locale);
-      if (!pat && l_wordItem !== wordItem) {
-        var l_wordItem = wordItem.toLowerCase();
-        var l_stripItem = stripItem.toLowerCase();
-        var l_periodItem = periodItem.toLowerCase();
-
-        pat = binarySearch(wordsList, l_wordItem, locale)
-        if (!pat && l_stripItem !== l_wordItem) pat = binarySearch(wordsList, l_stripItem, locale);
-        if (!pat && l_stripItem !== l_periodItem) pat = binarySearch(wordsList, l_periodItem, locale);
-      }
+      var pat = searchWord(wordsList, wordItem, stripItem, periodItem, locale, false);
 
       // Check if worditem exist in the ignorelist
       var ignorepat = false;
       if (!pat) {
-        var ignorepat = binarySearch(ignoreList, wordItem, locale);
-        if (!ignorepat && wordItem !== stripItem) ignorepat = binarySearch(ignoreList, stripItem, locale);
-        if (!ignorepat && stripItem !== periodItem) ignorepat = binarySearch(ignoreList, periodItem, locale);
-        if (!ignorepat && l_wordItem !== wordItem) {
-          ignorepat = binarySearch(ignoreList, l_wordItem, locale);
-          if (!ignorepat && l_stripItem !== l_wordItem) ignorepat = binarySearch(ignoreList, l_stripItem, locale);
-          if (!ignorepat && l_stripItem !== l_periodItem) ignorepat = binarySearch(ignoreList, l_periodItem, locale);
-        }
+        var ignoreList = data[`${locale}_ignore`];
+        ignorepat = searchWord(ignoreList, wordItem, stripItem, periodItem, locale, false);
+      }
+
+      var lowPriority = false;
+      if (!pat && !ignorepat) {
+        lowPriority = searchWord(wordsList, wordItem, stripItem, periodItem, locale, true);
       }
 
       if (wordItem && !pat && !ignorepat) {
         var nodeData = node.data;
+
+        // Find the word inside the text
         var escapeItem = escapeRegExp(wordItem);
         var regex = '\\b(' + escapeItem + ')\\b';
         var pos = nodeData.search(regex);
@@ -67,7 +77,12 @@ jQuery.fn.highlight = function (data, locales) {
         if (pos > -1) {
           skip = 1;
           var txt = $(node).text();
-          var spanEl = `<span class="sepllchecker-highlight" data-locale="${locale}">${wordItem}</span>`;
+          var spanEl = "";
+          if (lowPriority) {
+            spanEl = `<span class="sepllchecker-highlight spellchecker_priority-low" data-locale="${locale}">${wordItem}</span>`;
+          } else {
+            spanEl = `<span class="sepllchecker-highlight" data-locale="${locale}">${wordItem}</span>`;
+          }
           targetTxt = txt.substr(0, pos) + spanEl + txt.substr(pos + wordItem.length);
           $(node).replaceWith(targetTxt)
           return skip;
@@ -104,7 +119,7 @@ jQuery.fn.highlight = function (data, locales) {
       node.childNodes &&
       !/(script|style)/i.test(node.tagName) && 
       !["TEXTAREA", "SELECT", "INPUT"].includes(node.tagName) && 
-      !(node.tagName === 'SPAN' && node.className === 'sepllchecker-highlight')
+      !(node.tagName === 'SPAN' && node.className === 'sepllchecker-highlight' || node.className === 'sepllchecker-highlight spellchecker_priority-low')
     ) {
       for (var i = 0; i < node.childNodes.length; ++i) {
         i += innerHighlight(node.childNodes[i]);
@@ -191,7 +206,7 @@ async function initFileInfo() {
         
         var ignoreTxt = await getFileInfo(`${lc}-ignore.txt`);
         if (ignoreTxt) {
-          var ignoreInfo = parseFile(ignoreTxt, true);
+          var ignoreInfo = parseFile(ignoreTxt);
           resMap[`${lc}_ignore`] = ignoreInfo.words;
         } else {
           resMap[`${lc}_ignore`] = [];
@@ -242,6 +257,7 @@ function initContextMenu() {
         // its results are destroyed every time the menu is hidden
         var el = e.target;
         var locale = $(el).data('locale');
+        var lowPriority = $(el).hasClass('spellchecker_priority-low')
         var optionText = replaceTypoQuotes(decodeHTMLEntities(($(el).text())));
 
         var items = {};
@@ -289,7 +305,8 @@ function initContextMenu() {
                 {
                   type: "ACTIVITY_ADD_TEXT",
                   data: str,
-                  locale
+                  locale,
+                  lowPriority
                 },
                 function () {
                   $(el)[0].parentNode.replaceChild(document.createTextNode($(el).text()), $(el)[0]);
@@ -301,9 +318,11 @@ function initContextMenu() {
                 {
                   type: "ACTIVITY_IGNORE_TEXT",
                   data: str,
-                  locale
+                  locale,
+                  lowPriority
                 },
                 function () {
+                  console.log("Ignore text success")
                   $(el)[0].parentNode.replaceChild(document.createTextNode($(el).text()), $(el)[0]);
                 }
               );
