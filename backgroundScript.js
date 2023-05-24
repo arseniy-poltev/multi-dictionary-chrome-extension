@@ -55,11 +55,12 @@ async function updateStorage(wordsList, locale, mode) {
   } else if (mode === "SORT") {
     dictionary = { ...dictionary, [`${locale}_words`]: wordsList };
   }
-  chrome.storage.local.set({ dictionary }, function () {});
+  await chrome.storage.local.set({ dictionary });
   return true;
 }
 
 async function saveTextToFile(selectionText, locale, mode, lowPriority = false) {
+  selectionText = selectionText.trim();
   var items = await chrome.storage.local.get(
     {
       directory: "",
@@ -69,11 +70,12 @@ async function saveTextToFile(selectionText, locale, mode, lowPriority = false) 
       dictionary: {}
     });
 
+    var lowerSelectionTxt = selectionText.trim().toLowerCase();
     let wordsList, locales = items.dictionary[`${locale}_locales`];
     if (mode === 'ADD') {
       wordsList = items.dictionary[`${locale}_words`];
       if (lowPriority) {
-        wordsList = wordsList.filter(el => el !== `~${selectionText.trim()}` || el !== `~${selectionText.trim().toLowerCase()}`)
+        wordsList = wordsList.filter(el => el !== `~${selectionText}` || el !== `~${lowerSelectionTxt}`)
       }
     } else if (mode === "IGNORE"){
       wordsList = items.dictionary[`${locale}_ignore`];
@@ -86,12 +88,15 @@ async function saveTextToFile(selectionText, locale, mode, lowPriority = false) 
     
     if (mode === "ADD" || mode === "IGNORE") {
       let findItem = wordsList.find(
-        (el) => el === selectionText.trim().toLowerCase() || el === selectionText.trim()
+        (el) => el === lowerSelectionTxt || el === selectionText
       );
     
       if (findItem) {
       } else {
         wordsList = insertSorted(wordsList, selectionText.trim(), locale);
+      }
+      if (mode === 'ADD' && lowPriority) {
+        wordsList = wordsList.filter(el => el.toLowerCase() !== `~${lowerSelectionTxt}`)
       }
     }
 
@@ -125,14 +130,17 @@ async function saveTextToFile(selectionText, locale, mode, lowPriority = false) 
         fileName = locale + "-" + TEXT_FILE_NAME;
         wordsList = items.dictionary[`${locale}_words`];
         if (wordsList) {
-          wordsList = wordsList.filter(el => el !== `~${selectionText.trim()}` || el !== `~${selectionText.trim().toLowerCase()}`)
+          wordsList = wordsList.filter(el => el.toLowerCase() !== `~${lowerSelectionTxt}`)
           fileContents = createFileContents(wordsList, locales, "ADD");
           res = await saveTextViaApp(directory, fileName, fileContents);
           if (res) await updateStorage(wordsList, locale, mode);
         }
       }
 
-      notify("Text added to the ignorelist.");
+      if (mode === "IGNORE") {
+        notify("Text added to the ignorelist.");
+        return;
+      }
       return;
     }
 }
