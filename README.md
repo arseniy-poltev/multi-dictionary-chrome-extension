@@ -19,3 +19,7 @@
 - Enter c:\savetexttofile\dictionary as the local save directory, then click Save and close the modal.
 - Browse to a web page and check if some words are highlighted.
 - Add a word and see if a popup appears about the word being added, and see if the word is added to wordlist.txt
+
+# Notes
+
+When you sort a dictionary using the Sort command, there is no visual feedback when the sorting is done. The best way is to open the Windows Task Manager and look at how long Chrome is really busy. When it returns to normal CPU usage, the sorting has finished.
