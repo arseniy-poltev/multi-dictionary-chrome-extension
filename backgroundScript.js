@@ -96,7 +96,7 @@ async function saveTextToFile(selectionText, locale, mode, lowPriority = false) 
         wordsList = insertSorted(wordsList, selectionText.trim(), locale);
       }
       if (mode === 'ADD' && lowPriority) {
-        wordsList = wordsList.filter(el => el.toLowerCase() !== `~${lowerSelectionTxt}`)
+        wordsList = wordsList.filter(el => el !== `~${selectionText}`)
       }
     }
 
@@ -130,7 +130,7 @@ async function saveTextToFile(selectionText, locale, mode, lowPriority = false) 
         fileName = locale + "-" + TEXT_FILE_NAME;
         wordsList = items.dictionary[`${locale}_words`];
         if (wordsList) {
-          wordsList = wordsList.filter(el => el.toLowerCase() !== `~${lowerSelectionTxt}`)
+          wordsList = wordsList.filter(el => el !== `~${selectionText}`)
           fileContents = createFileContents(wordsList, locales, "ADD");
           res = await saveTextViaApp(directory, fileName, fileContents);
           if (res) await updateStorage(wordsList, locale, mode);

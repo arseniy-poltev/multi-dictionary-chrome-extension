@@ -24,6 +24,8 @@ jQuery.fn.highlight = function (data, locales) {
       pat = binarySearch(wordsList, l_wordItem, locale)
       if (!pat && l_stripItem !== l_wordItem) pat = binarySearch(wordsList, l_stripItem, locale);
       if (!pat && l_stripItem !== l_periodItem) pat = binarySearch(wordsList, l_periodItem, locale);
+
+      
     }
 
     return pat;
@@ -217,7 +219,7 @@ async function initFileInfo() {
     }));
 
     $("body").highlight(resMap, locales);
-    initContextMenu();
+    initContextMenu(resMap);
     chrome.storage.local.set({
         dictionary: resMap
       },
@@ -247,7 +249,7 @@ function getSelectedText() {
   return "";
 }
 
-function initContextMenu() {
+function initContextMenu(dictionary) {
   $(function () {
     // register regular menu
     $.contextMenu({
@@ -259,6 +261,7 @@ function initContextMenu() {
         var locale = $(el).data('locale');
         var lowPriority = $(el).hasClass('spellchecker_priority-low')
         var optionText = replaceTypoQuotes(decodeHTMLEntities(($(el).text())));
+        var wordlist = dictionary[`${locale}_words`];
 
         var items = {};
         var optionText = removeSpeCharaceters(optionText);
@@ -270,27 +273,35 @@ function initContextMenu() {
         
         var optionList = getWordVariations(optionText);
         optionList.forEach(el => {
-          items["add_" + el] = { name: `Add "${el}" (${locale.toUpperCase()})` };  
+          if (!lowPriority || (lowPriority && binarySearch(wordlist, `~${el}`, locale))) {
+            items["add_" + el] = { name: `Add "${el}" (${locale.toUpperCase()})` };
+          }
         });
 
         if (removedText) {
           items["sep1"] = "---------";
           periodOptionList = getWordVariations(removedText);
           periodOptionList.forEach(el => {
-            items["add_" + el] = { name: `Add "${el}" (${locale.toUpperCase()})` };  
+            if (!lowPriority || (lowPriority && binarySearch(wordlist, `~${el}`, locale))) {
+              items["add_" + el] = { name: `Add "${el}" (${locale.toUpperCase()})` };  
+            }
           });
         }
 
         items["sep2"] = "---------";
         
         optionList.forEach(el => {
-          items["ignore_" + el] = { name: `Ignore "${el}" (${locale.toUpperCase()})`};  
+          if (!lowPriority || (lowPriority && binarySearch(wordlist, `~${el}`, locale))) {
+            items["ignore_" + el] = { name: `Ignore "${el}" (${locale.toUpperCase()})`};
+          }
         });
 
         if (periodOptionList) {
           items["sep3"] = "---------";
           periodOptionList.forEach(el => {
-            items["ignore_" + el] = { name: `Ignore "${el}" (${locale.toUpperCase()})`};  
+            if (!lowPriority || (lowPriority && binarySearch(wordlist, `~${el}`, locale))) {
+              items["ignore_" + el] = { name: `Ignore "${el}" (${locale.toUpperCase()})`};  
+            }
           });
         }
 
