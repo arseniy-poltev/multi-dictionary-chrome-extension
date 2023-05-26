@@ -129,9 +129,9 @@ async function saveTextToFile(selectionText, locale, mode, lowPriority = false) 
         wordsList = items.dictionary[`${locale}_words`];
         if (wordsList) {
           wordsList = wordsList.filter(el => el !== `~${selectionText}`)
+          await updateStorage(wordsList, locale, mode);
           fileContents = createFileContents(wordsList, locales, "ADD");
-          res = await saveTextViaApp(directory, fileName, fileContents);
-          if (res) await updateStorage(wordsList, locale, mode);
+          await saveTextViaApp(directory, fileName, fileContents);
         }
       }
 
