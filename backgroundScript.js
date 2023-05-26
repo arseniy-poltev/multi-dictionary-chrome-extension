@@ -75,7 +75,7 @@ async function saveTextToFile(selectionText, locale, mode, lowPriority = false) 
     if (mode === 'ADD') {
       wordsList = items.dictionary[`${locale}_words`];
       if (lowPriority) {
-        wordsList = wordsList.filter(el => el !== `~${selectionText}` || el !== `~${lowerSelectionTxt}`)
+        wordsList = wordsList.filter(el => el !== `~${selectionText}`)
       }
     } else if (mode === "IGNORE"){
       wordsList = items.dictionary[`${locale}_ignore`];
