@@ -20,6 +20,17 @@
 - Browse to a web page and check if some words are highlighted.
 - Add a word and see if a popup appears about the word being added, and see if the word is added to wordlist.txt
 
-# Notes
+# Sorting the wordlist
 
-When you sort a dictionary using the Sort command, there is no visual feedback when the sorting is done. The best way is to open the Windows Task Manager and look at how long Chrome is really busy. When it returns to normal CPU usage, the sorting has finished.
+Since the extension does a binary search to find words, the wordlist must be alphabetically sorted, in exactly the way that the JavaScript string comparisons want it:
+
+- Start with a wordlist that is sorted in any way.
+- Add the ISO language codes in the first line, save as UTF-8 with BOM, CR+LF
+- Copy it to c:\savetexttofile\dictionary
+- Close all browser windows except one.
+- Visit a web page of a matching language.
+- Many words will be highlighted.
+- Right-click on any highlighted word and choose "Sort".
+- Open the Windows Task Manager and wait until CPU usage goes back to normal.
+- Then you have a sorted wordlist. Press Ctrl+R and many fewer words will be higlighted.
+- Now you can start adding to the wordlist.
