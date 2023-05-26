@@ -111,8 +111,8 @@ async function saveTextToFile(selectionText, locale, mode, lowPriority = false) 
         fileName = locale + "-" + IGNORE_FILE_NAME;
       }
 
-      var res = await saveTextViaApp(directory, fileName, fileContents);
-      if (res) await updateStorage(wordsList, locale, mode);
+      await updateStorage(wordsList, locale, mode);
+      await saveTextViaApp(directory, fileName, fileContents);
 
       if (mode === "SORT") {
         notify("Wordlist sorted successfully.");
