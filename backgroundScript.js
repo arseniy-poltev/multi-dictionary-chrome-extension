@@ -87,9 +87,7 @@ async function saveTextToFile(selectionText, locale, mode, lowPriority = false) 
     }
     
     if (mode === "ADD" || mode === "IGNORE") {
-      let findItem = wordsList.find(
-        (el) => el === lowerSelectionTxt || el === selectionText
-      );
+      let findItem = wordsList.find((el) => el === selectionText);
     
       if (findItem) {
       } else {
