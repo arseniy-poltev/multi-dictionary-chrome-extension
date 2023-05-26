@@ -6,26 +6,39 @@ jQuery.fn.highlight = function (data, locales) {
     }
   });
 
-  function searchWord(wordsList, wordItem, stripItem, periodItem, locale, lowPriority) {
-    if (lowPriority) {
-      wordItem = `~${wordItem}`;
-      stripItem = `~${stripItem}`;
-      periodItem = `~${periodItem}`;
-    }
-
-    var pat = binarySearch(wordsList, wordItem, locale);
-    if (!pat && wordItem !== stripItem) pat = binarySearch(wordsList, stripItem, locale);
-    if (!pat && stripItem !== periodItem) pat = binarySearch(wordsList, periodItem, locale);
+  function findWord(wList, wItem, sItem, pItem, locale, lowPriority) {
+    var pat = binarySearch(wList, wItem, locale, lowPriority);
     if (!pat) {
-      var l_wordItem = wordItem.toLowerCase();
-      var l_stripItem = stripItem.toLowerCase();
-      var l_periodItem = periodItem.toLowerCase();
+      if (!pat && wItem !== sItem) pat = binarySearch(wList, sItem, locale, lowPriority);
+      if (!pat && sItem !== pItem) pat = binarySearch(wList, pItem, locale, lowPriority);  
+    }
+    return pat;
+  }
 
-      pat = binarySearch(wordsList, l_wordItem, locale)
-      if (!pat && l_stripItem !== l_wordItem) pat = binarySearch(wordsList, l_stripItem, locale);
-      if (!pat && l_stripItem !== l_periodItem) pat = binarySearch(wordsList, l_periodItem, locale);
+  function searchWord(wordsList, wordItem, stripItem, periodItem, locale, lowPriority) {
+    var pat = binarySearch(wordsList, wordItem, locale, lowPriority);
+    if (!pat && wordItem !== stripItem) pat = binarySearch(wordsList, stripItem, locale, lowPriority);
+    if (!pat && stripItem !== periodItem) pat = binarySearch(wordsList, periodItem, locale, lowPriority);
+    var pat = findWord(wordsList, wordItem, stripItem, periodItem, locale, lowPriority)
+    if (!pat) {
+      if (wordItem.toUpperCase() !== wordItem) {
+        let l_wordItem = lowercaseFirstLetter(wordItem);
+        let l_stripItem = lowercaseFirstLetter(stripItem);
+        let l_periodItem = lowercaseFirstLetter(periodItem);
+        pat = findWord(wordsList, l_wordItem, l_stripItem, l_periodItem, locale, lowPriority)
+      } else if (wordItem.toUpperCase() === wordItem) {
+        let c_wordItem = capitalizeFirstLetter(wordItem);
+        let c_stripItem = capitalizeFirstLetter(stripItem);
+        let c_periodItem = capitalizeFirstLetter(periodItem);
 
-      
+        pat = findWord(wordsList, c_wordItem, c_stripItem, c_periodItem, locale, lowPriority);
+        if (!pat) {
+          let u_wordItem = wordItem.toLowerCase();
+          let u_stripItem = stripItem.toLowerCase();
+          let u_periodItem = periodItem.toLowerCase();
+          pat = findWord(wordsList, u_wordItem, u_stripItem, u_periodItem, locale, lowPriority);
+        }
+      }
     }
 
     return pat;

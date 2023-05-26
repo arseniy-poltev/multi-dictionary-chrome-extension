@@ -52,7 +52,7 @@ function onlyUnique(value, index, array) {
 }
 
 function getWordVariations(str) {
-  let upperCaseStr, cappitalizedStr, lowerCaseStr, resArr = [];
+  let upperCaseStr, capitalizedStr, lowerCaseStr, resArr = [];
   if (!str) return null;
 
   // A word is all lowercase
@@ -62,20 +62,20 @@ function getWordVariations(str) {
   // A word is all upppercase
   if (str === str.toUpperCase()) {
     upperCaseStr = str;
-    cappitalizedStr = str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
+    capitalizedStr = str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
     lowerCaseStr = str.toLowerCase();
-    resArr = [str, upperCaseStr, cappitalizedStr, lowerCaseStr];
+    resArr = [str, upperCaseStr, capitalizedStr, lowerCaseStr];
   } else { // A word is written with an initial upppercase
     if (str.charAt(0).toUpperCase() === str.charAt(0)) {
       if (str.slice(1).toLowerCase() === str.slice(1)) { // rest in lowercase
-        cappitalizedStr = str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
+        capitalizedStr = str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
         lowerCaseStr = str.toLowerCase();
-        resArr = [str, cappitalizedStr, lowerCaseStr]
+        resArr = [str, capitalizedStr, lowerCaseStr]
       } else { // one or more letters in uppercase
         upperCaseStr = str.toUpperCase();
-        cappitalizedStr = str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
+        capitalizedStr = str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
         lowerCaseStr = str.toLowerCase();
-        resArr = [str, upperCaseStr, cappitalizedStr, lowerCaseStr]
+        resArr = [str, upperCaseStr, capitalizedStr, lowerCaseStr]
       }
     } else { // A word is written with an initial lowercase but one or more letters in uppercase
       lowerCaseStr = str.toLowerCase();
@@ -87,8 +87,11 @@ function getWordVariations(str) {
   return res;
 }
 
-function binarySearch(arr, xm, locale = null)
+function binarySearch(arr, xm, locale, lowPriority = false)
 {
+  if (lowPriority) {
+    xm = '~' + xm;
+  }
   if (!arr || arr.length === 0) return false;
   let l = 0, r = arr.length - 1;
   while (l <= r) {
@@ -178,4 +181,14 @@ function parseFile(str, localeInfo = false) {
     }
   }
   return res;
+}
+
+function capitalizeFirstLetter(str) {
+  if (!str || str.length === 0) return str;
+  return str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
+}
+
+function lowercaseFirstLetter(str) {
+  if (!str || str.length === 0) return str;
+  return str.charAt(0).toLowerCase() + str.slice(1);
 }
