@@ -11,18 +11,18 @@ const IGNORE_FILE_NAME = "ignore.txt";
 
 var directory;
 var notifications;
-var conflictAction;
 var testConnectPayload = {
   action: TEST_CONNECTIVITY_ACTION,
 };
 
-async function saveTextViaApp(directory, fileName, fileContents) {
+async function saveTextViaApp(directory, word, mode, locale, lowPriority) {
   var payload = {
     action: SAVE_TEXT_ACTION,
-    filename: fileName,
-    directory: directory,
-    fileContent: fileContents,
-    conflictAction: conflictAction,
+    word,
+    mode, 
+    locale, 
+    lowPriority,
+    directory
   };
 
   let response = await chrome.runtime.sendNativeMessage(
@@ -61,45 +61,6 @@ async function updateStorage(wordsList, locale, mode) {
 
 async function saveTextToFile(selectionText, locale, mode, lowPriority = false) {
   selectionText = selectionText.trim();
-  var items = await chrome.storage.local.get(
-    {
-      directory: "",
-      notifications: true,
-      conflictAction: "uniquify",
-      ignoreWords: [],
-      dictionary: {}
-    });
-
-    var lowerSelectionTxt = selectionText.trim().toLowerCase();
-    let wordsList, locales = items.dictionary[`${locale}_locales`];
-    if (mode === 'ADD') {
-      wordsList = items.dictionary[`${locale}_words`];
-      if (lowPriority) {
-        wordsList = wordsList.filter(el => el !== `~${selectionText}`)
-      }
-    } else if (mode === "IGNORE"){
-      wordsList = items.dictionary[`${locale}_ignore`];
-    } else if (mode === "SORT") {
-      wordsList = items.dictionary[`${locale}_words`];
-      wordsList.sort(function(a, b) {
-        return a.localeCompare(b, locale,  {sensitivity:'variant'});
-      })
-    }
-    
-    if (mode === "ADD" || mode === "IGNORE") {
-      let findItem = wordsList.find((el) => el === selectionText);
-    
-      if (findItem) {
-      } else {
-        wordsList = insertSorted(wordsList, selectionText.trim(), locale);
-      }
-      if (mode === 'ADD' && lowPriority) {
-        wordsList = wordsList.filter(el => el !== `~${selectionText}`)
-      }
-    }
-
-    var fileContents = createFileContents(wordsList, locales, mode);
-
     // Test connectivity
     var response = await chrome.runtime.sendNativeMessage(HOST_APPLICATION_NAME, testConnectPayload);
     var responseObject = JSON.parse(response);
@@ -111,8 +72,8 @@ async function saveTextToFile(selectionText, locale, mode, lowPriority = false) 
         fileName = locale + "-" + IGNORE_FILE_NAME;
       }
 
-      await updateStorage(wordsList, locale, mode);
-      await saveTextViaApp(directory, fileName, fileContents);
+      // await updateStorage(wordsList, locale, mode);
+      await saveTextViaApp(directory, selectionText, mode, locale, lowPriority);
 
       if (mode === "SORT") {
         notify("Wordlist sorted successfully.");
@@ -124,16 +85,6 @@ async function saveTextToFile(selectionText, locale, mode, lowPriority = false) 
         return;
       }
 
-      if (lowPriority) {
-        fileName = locale + "-" + TEXT_FILE_NAME;
-        wordsList = items.dictionary[`${locale}_words`];
-        if (wordsList) {
-          wordsList = wordsList.filter(el => el !== `~${selectionText}`)
-          await updateStorage(wordsList, locale, mode);
-          fileContents = createFileContents(wordsList, locales, "ADD");
-          await saveTextViaApp(directory, fileName, fileContents);
-        }
-      }
 
       if (mode === "IGNORE") {
         notify("Text added to the ignorelist.");
@@ -181,12 +132,10 @@ chrome.storage.local.get(
   {
     directory: "",
     notifications: true,
-    conflictAction: "uniquify",
   },
   function (items) {
     directory = items.directory;
     notifications = items.notifications;
-    conflictAction = items.conflictAction;
   }
 );
 
@@ -243,20 +192,20 @@ chrome.runtime.onInstalled.addListener(function (details) {
 });
 
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(async function (request, sender, sendResponse) {
   let selectionText = request.data;
   let lowPriority = request.lowPriority
   let locale = request.locale;
   if (request.type === "ACTIVITY_ADD_TEXT") {
-    saveTextToFile(selectionText, locale, "ADD", lowPriority);
+    await saveTextToFile(selectionText, locale, "ADD", lowPriority);
   }
   
   if (request.type === "ACTIVITY_IGNORE_TEXT") {
-    saveTextToFile(selectionText, locale, "IGNORE", lowPriority);
+    await saveTextToFile(selectionText, locale, "IGNORE", lowPriority);
   }
 
   if (request.type === "ACTIVITY_SORT_WORDS") {
-    saveTextToFile("", locale, "SORT");
+    await saveTextToFile("", locale, "SORT");
   }
   sendResponse();
 });

@@ -97,14 +97,14 @@ function binarySearch(arr, xm, locale, lowPriority = false)
   while (l <= r) {
       let m = l + Math.floor((r - l) / 2);
 
-      let res = locale? xm.localeCompare(arr[m], locale, {sensitivity:'variant'}): xm.localeCompare(arr[m], {sensitivity:'variant'});
+      // let res = locale? xm.localeCompare(arr[m], locale, {sensitivity:'variant'}): xm.localeCompare(arr[m], {sensitivity:'variant'});
           
       // Check if x is present at mid
-      if (res == 0)
+      if (xm == arr[m])
           return true;
 
       // If x greater, ignore left half
-      if (res > 0)
+      if (xm > arr[m])
           l = m + 1;
 
       // If x is smaller, ignore right half
@@ -129,7 +129,7 @@ function insertSorted(arr, item, locale) {
   var max = arr.length;
   var index = Math.floor((min + max) / 2);
   while (max > min) {
-      if (comparator(item, arr[index]) < 0) {
+      if (item < arr[index]) {
           max = index;
       } else {
           min = index + 1;
@@ -148,11 +148,11 @@ function searchPosition(items, value, locale) {
   let middle = Math.floor((stopIndex + startIndex) / 2);
   while (items[middle] != value && startIndex < stopIndex) {
 
-    var compareRes = value.localeCompare(items[middle], locale, {sensitivity:'variant'})
+    var compareRes = value < items[middle];
     //adjust search area
-    if (compareRes < 0) {
+    if (value < items[middle]) {
       stopIndex = middle - 1;
-    } else if (compareRes > 0) {
+    } else if (value > items[middle]) {
       startIndex = middle + 1;
     }
 

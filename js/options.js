@@ -37,7 +37,6 @@ function appConnectionTest() {
       document.getElementById('nativeAppMessage').innerHTML =
         '<p id="nativeAppNotInstalledMessage" class="hide">' +
           'The \'Save Text to File\' host application was not found on this device.<br/>' +
-          'To enable all extension features, follow setup instructions outlined <a href="https://github.com/bobbyrne01/save-text-to-file-chrome#installation" target="_blank">here</a>' +
         '</p>';
       document.getElementById('nativeAppInstalled').checked = false;
       document.getElementById('directory').disabled = true;
