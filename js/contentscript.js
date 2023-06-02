@@ -92,11 +92,13 @@ jQuery.fn.highlight = function (data, locales) {
         if (pos > -1) {
           skip = 1;
           var txt = $(node).text();
+          var parentFontSize = $(node).parent().css('font-size');
+          var margin = parseFloat(parentFontSize) / 7
           var spanEl = "";
           if (lowPriority) {
-            spanEl = `<span class="sepllchecker-highlight spellchecker_priority-low" data-locale="${locale}">${wordItem}</span>`;
+            spanEl = `<span style="margin-left:${margin}px;margin-right:${margin}px;" class="sepllchecker-highlight spellchecker_priority-low" data-locale="${locale}">${wordItem}</span>`;
           } else {
-            spanEl = `<span class="sepllchecker-highlight" data-locale="${locale}">${wordItem}</span>`;
+            spanEl = `<span style="margin-left:${margin}px;margin-right:${margin}px;" class="sepllchecker-highlight" data-locale="${locale}">${wordItem}</span>`;
           }
           targetTxt = txt.substr(0, pos) + spanEl + txt.substr(pos + wordItem.length);
           $(node).replaceWith(targetTxt)
